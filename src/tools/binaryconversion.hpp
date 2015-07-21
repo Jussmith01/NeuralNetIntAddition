@@ -15,9 +15,9 @@
 Input a vector of floating points and return
 vector of their bit representation.
 ------------------------------------------*/
-std::vector<float> ProduceBinaryVector(int value)
+std::vector<double> ProduceBinaryVector(int value)
 {
-    std::vector<float> bitvec;
+    std::vector<double> bitvec;
 
     const int S = sizeof(int) * CHAR_BIT;
 
@@ -25,7 +25,7 @@ std::vector<float> ProduceBinaryVector(int value)
 
     std::bitset<S> bits(value);
     for (int j=0; j<S; ++j)
-        bitvec[j]=(float)bits[j];
+        bitvec[j]=(double)bits[j];
 
     return bitvec;
 };
@@ -37,7 +37,7 @@ std::vector<float> ProduceBinaryVector(int value)
 Input a vector of floating points and return
 vector of their bit representation.
 ------------------------------------------*/
-int ProduceIntegerFromBinary(std::vector<float>  &bitvec)
+int ProduceIntegerFromBinary(std::vector<double>  &bitvec)
 {
     const int S = sizeof(int) * CHAR_BIT;
 

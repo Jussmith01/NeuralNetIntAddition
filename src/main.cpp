@@ -6,33 +6,56 @@
 
 int main(int argc, char *argv[])
 {
-    int value;
-    std::vector<float> input = ProduceBinaryVector(2);
-    std::vector<float> output;
+    if (argv[1]==NULL || argv[2]==NULL || argv[3]==NULL)
+    {
+        std::cout << "Error: Missing arguments!" << std::endl;
+        std::cout << "Syntax: ./NeuralNetIntAddition [eta] [tss] [hls]" << std::endl;
+        std::cout << "   eta: The learning rate" << std::endl;
+        std::cout << "   tss: The training set size" << std::endl;
+        std::cout << "   hls: The hidden layer size" << std::endl;
 
-    //Begin Neural Network Computation
-    NeuralNetwork nn(input);
-    nn.ComputeLayers();
-    nn.GetOutput(output);
+        exit(1);
+    }
 
-    value = ProduceIntegerFromBinary(output);
-    std::cout << value << " COST: " << nn.CalculateCost(input) << std::endl;
+    double eta = atof(argv[1]);
+    int tss = atoi(argv[2]);
+    int hls = atoi(argv[3]);
 
-    input = ProduceBinaryVector(-34585646);
-    nn.NewTrainingData(input);
-    nn.ComputeLayers();
-    nn.GetOutput(output);
+    std::cout << "eta: " << eta << " tss: " << tss << std::endl;
 
-    value = ProduceIntegerFromBinary(output);
-    std::cout << value << " COST: " << nn.CalculateCost(input) << std::endl;
+    std::vector<double> input;
+    std::vector<double> desired;
+    std::vector<double> output;
 
-    input = ProduceBinaryVector(2);
-    nn.NewTrainingData(input);
-    nn.ComputeLayers();
-    nn.GetOutput(output);
+    RandomInt irandgen; // Train with a set of 10000
+    std::vector<int> irand(tss);
+    irandgen.FillVector(irand,0,100000);
+    irandgen.Clear();
 
-    value = ProduceIntegerFromBinary(output);
-    std::cout << value << " COST: " << nn.CalculateCost(input) << std::endl;
+    NeuralNetwork nn(32,hls,32,eta);
+
+    int ep=0;
+    while (ep<50)
+    {
+        for (auto&& i : irand)
+        {
+            //Begin Neural Network Computation
+            input = ProduceBinaryVector(i);
+            desired = ProduceBinaryVector(i+1);
+
+            nn.NewTrainingData(input,desired);
+            nn.ComputeLayers();
+            nn.ComputeDerivatives();
+            nn.ResetForNewTrainingData();
+        }
+
+        nn.CompleteTrainingSet();
+        ++ep;
+    }
+
+    //nn.GetOutput(output);
+    //value = ProduceIntegerFromBinary(output);
+    //std::cout << value << std::endl;
 
     nn.Clear();
 

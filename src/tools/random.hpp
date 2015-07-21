@@ -49,23 +49,32 @@ class NormRandomReal
                 index = 0;
         };
 
-        float GenRandReal(float mean,float stdv)
+        double GenRandReal(double mean,double stdv)
         {
                 generator.seed(array[index]);//Seed the generator
-                std::normal_distribution<float> distribution(mean,stdv);//Setup the distribution
-                float RN = (float)distribution(generator);//Denerate the random number
+                std::normal_distribution<double> distribution(mean,stdv);//Setup the distribution
+                double RN = (double)distribution(generator);//Denerate the random number
                 //std::cout << "RandomNumber: " << RN << std::endl;
                 ++index;//Increase seed offset
                 return RN;
         };
 
-        void FillVector(std::vector<float> &vec,float mean,float stdv)
+        void FillVector(std::vector<double> &vec,double mean,double stdv)
         {
             int N = vec.size();
             Setup(N,1728);
 
+            std::cout << " Generating (" << N  << ") random numbers." << std::endl;
+
             for (auto&& v : vec)
+            {
                 v=GenRandReal(mean,stdv);
+                if (v!=v)
+                {
+                    std::cout << " NAN DETECTED (NormalRandomGenerator) v: " << v << std::endl;
+                    exit(1);
+                }
+            }
         };
 
         void Clear()
@@ -74,5 +83,65 @@ class NormRandomReal
         };
 };
 
+/*----------------------------------------
+  ***************************************
+  |  Class for generating random Ints   |
+  ***************************************
+Example Use:
+RandomInt RI(w,i); //int w=num seeds
+		   //int i=thread seed
+
+int someInt = GenRandInt(high,low)
+		   //Parameters give the
+		   //range of the int rtn'd
+------------------------------------------*/
+class RandomInt
+{
+        std::default_random_engine generator;
+        std::vector<int> array;
+        int index;
+
+        public:
+        RandomInt(){};
+        RandomInt(int w,int i){Setup(w,i);};
+
+        void Setup(int w,int i)
+        {
+                time_t Time;
+                time(&Time);
+                int seedOffset=(int)Time;
+
+                array.resize(w);
+
+                int t = (int)omp_get_wtime()+i;
+                std::seed_seq seed = {seedOffset,t,i+100};
+                seed.generate(array.begin(),array.end());//Seed the generator
+                index = 0;
+        };
+
+        int GenRandInt(int high,int low)
+        {
+                generator.seed(array[index]);//Seed the generator
+                std::uniform_int_distribution<int> distribution(low,high);//Setup the distribution
+                int RN = (int)distribution(generator);//Denerate the random number
+                //std::cout << "RandomNumber: " << RN << std::endl;
+                ++index;//Increase seed offset
+                return RN;
+        };
+
+        void FillVector(std::vector<int> &vec,int low,int high)
+        {
+            int N = vec.size();
+            Setup(N,63463);
+
+            for (auto&& v : vec)
+                v=GenRandInt(high,low);
+        };
+
+        void Clear()
+        {
+            array.clear();
+        };
+};
 
 #endif

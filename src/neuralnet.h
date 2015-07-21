@@ -9,8 +9,13 @@
 
 class NeuralNetwork
 {
-    std::vector<float> ila; // Input Layer Activation
-    std::vector<float> ola; // Output Layer Activation
+    std::vector<double> ila; // Input Layer Activation
+    std::vector<double> ola; // Output Layer Activation
+    std::vector<double> de; // Desired outcome
+
+    double eta;
+    double avgCost;
+    long int cntr;
 
     NeuralNetLayer nnl;
     NeuralNetLayer nno;
@@ -19,48 +24,84 @@ class NeuralNetwork
 
 public:
 
-    NeuralNetwork(std::vector<float> &ila)
+    //NeuralNetwork(std::vector<float> &ila,std::vector<float> &de,float eta)
+    NeuralNetwork(int iptN,int midN,int outN,float eta)
     {
-        this->ila.resize(ila.size());
-        memcpy(&this->ila[0],&ila[0],ila.size()*sizeof(float));
+        //this->ila=ila;
+        //this->de=de;
+        this->eta=eta;
 
-        nnl.Init(32,100);
-        nno.Init(100,32);
+        nnl.Init(iptN,midN);
+        nno.Init(midN,outN);
+
+        cntr=0;
+        avgCost=0;
     };
 
-    void NewTrainingData(std::vector<float> &ila)
+    void NewTrainingData(std::vector<double> &ila,std::vector<double> &de)
     {
-        memcpy(&this->ila[0],&ila[0],ila.size()*sizeof(float));
-        ola.clear();
+        this->ila=ila;
+        this->de=de;
     };
 
     void ComputeLayers()
     {
         nnl.ComputeActivation(ila);
-        nno.ComputeActivation(nnl.GetActivation());
+        nno.ComputeActivation(nnl.GetActivation());// Getting Nanners????!!!!
 
         ola=nno.GetActivation();
+
+        avgCost+=CalculateCost();
+        ++cntr;
     };
 
-    float CalculateCost(std::vector<float> &de)
+    void ComputeDerivatives()
+    {
+        nno.ComputeInitalError(de);
+        nnl.ComputeError(nno);
+
+        nnl.ComputeDerivatives(ila);
+        nno.ComputeDerivatives(nnl.GetActivation());
+    };
+
+    double CalculateCost()
     {
         float cost = 0.0;
 
         for (int i=0;i<int(ola.size());++i)
         {
-            float diff = de[i] - ola[i];
+            float diff = de[i] - nno.GetActivation()[i];
             cost+=diff*diff;
         };
 
         return 0.5 * cost;
     };
 
-    void GetOutput(std::vector<float> &ola)
+    void GetOutput(std::vector<double> &ola)
     {
         if (!ola.empty())
             ola.clear();
 
         ola=this->ola;
+    };
+
+    void ResetForNewTrainingData()
+    {
+        this->ila.clear();
+        this->de.clear();
+        this->ola.clear();
+    };
+
+    void CompleteTrainingSet()
+    {
+        std::cout << " avgCost of training set: " << avgCost/double(cntr) << std::endl;
+        //ResetForNewTrainingData();
+
+        nnl.EndTrainingSet(eta);
+        nno.EndTrainingSet(eta);
+
+        cntr=0;
+        avgCost=0.0;
     };
 
     void Clear()
