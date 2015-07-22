@@ -48,11 +48,8 @@ public:
 
     void ComputeLayers()
     {
-        std::cout << "\n Computing Activation\n";
-        std::cout << "  Compute Activation Hidden Layer 1\n";
         nnl1.ComputeActivation(ila);
         //nnl2.ComputeActivation(nnl1.GetActivation());
-        std::cout << "  Compute Activation of Output layer\n";
         nno.ComputeActivation(nnl1.GetActivation());// Getting Nanners????!!!!
 
         ola=nno.GetActivation();
@@ -64,19 +61,13 @@ public:
     void ComputeDerivatives()
     {
         // Backpropagate
-        std::cout << "\n Backpropagation\n";
-        std::cout << "  Output Errors\n";
         nno.ComputeInitalError(de);
         //nnl2.ComputeError(nno);
-        std::cout << "  Hiddle Layer 1 Errors\n";
         nnl1.ComputeError(nno);
 
         // Calculate Derivatives
-        std::cout << "\n Compute Derivatives\n";
-        std::cout << "  Hidden Layer 1 Derivatives\n";
         nnl1.ComputeDerivatives(ila);
         //nnl2.ComputeDerivatives(nnl1.GetActivation());
-        std::cout << "  Output Layer Derivatives\n";
         nno.ComputeDerivatives(nnl1.GetActivation());
     };
 
@@ -103,7 +94,6 @@ public:
 
     void ResetForNewTrainingData()
     {
-        std::cout << "\n Resetting for new training data\n";
 
         this->ila.clear();
         this->de.clear();
@@ -112,7 +102,6 @@ public:
 
     void CompleteTrainingSet()
     {
-        std::cout << "\n Training Epoch\n";
         std::cout << "  avgCost of training set: " << avgCost/double(cntr) << std::endl;
         //ResetForNewTrainingData();
 

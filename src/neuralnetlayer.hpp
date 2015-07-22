@@ -45,10 +45,8 @@ class NeuralNetLayer
             }
             else
             {
-                a[i]=exp(-z[i])/pow(1.0+exp(-z[i]),2);
+                a[i]=1.0/(1.0+exp(-z[i]));
             }
-
-            a[i]=1.0/(1.0+exp(-z[i]));
 
             if (a[i]!=a[i])
             {
@@ -70,7 +68,7 @@ class NeuralNetLayer
             }
             else
             {
-                d[i]=exp(-z[i])/pow(1.0+exp(-z[i]),2);
+                d[i]=exp(z[i])/pow(1.0+exp(z[i]),2);
             }
 
             if (d[i]!=d[i])
@@ -136,9 +134,9 @@ public:
             z[i]=0.0;
             for (int j=0; j<Nw; ++j)
             {
-                z[i]+=w[j+i*Nw]*ia[i];
+                z[i]+=w[j+i*Nw]*ia[j];
 
-                if (isinf(w[j+i*Nw]*ia[i]))
+                if (isinf(w[j+i*Nw]*ia[j]))
                 {
                   z[i]=1.0e+296;
                 }
@@ -146,7 +144,7 @@ public:
                 if (z[i]!=z[i])
                 {
                     std::cout << " NAN DETECTED (ComputeActivation in loop) z: " << z[i] << std::endl;
-                    std::cout << " w[j+i*Nw]* ia[i] = (" << j+i*Nw << ") "<< w[j+i*Nw] << " * " << ia[i] << " = " << w[j+i*Nw]*ia[i] << std::endl;
+                    std::cout << " w[j+i*Nw]* ia[i] = (" << j+i*Nw << ") "<< w[j+i*Nw] << " * " << ia[j] << " = " << w[j+i*Nw]*ia[j] << std::endl;
                     exit(1);
                 }
             }
