@@ -32,9 +32,9 @@ public:
         //this->de=de;
         this->eta=eta;
 
-        nnl1.Init(iptN,midN);
+        nnl1.Init(iptN,midN,"Hidden1bgraph.dat");
         //nnl2.Init(midN,midN);
-        nno.Init(midN,outN);
+        nno.Init(midN,outN,"Output1bgraph.dat");
 
         cntr=0;
         avgCost=0;

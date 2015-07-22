@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 
     int ep=0;
     //int i=100;
-    while (ep<5000)
+    while (ep<500)
     {
         for (auto&& i : irand)
         {
