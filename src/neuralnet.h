@@ -113,7 +113,7 @@ public:
     void CompleteTrainingSet()
     {
         std::cout << "\n Training Epoch\n";
-        std::cout << "  avgCost of training set: " << avgCost/double(cntr) << std::endl;
+        std::cout << std::setprecision(5) << "  avgCost of training set: " << avgCost/double(cntr) << std::endl;
         //ResetForNewTrainingData();
 
         nnl1.EndTrainingSet(eta);

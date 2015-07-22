@@ -8,7 +8,9 @@
 
 int main(int argc, char *argv[])
 {
-    if (argv[1]==NULL || argv[2]==NULL || argv[3]==NULL)
+    std::cout.setf( std::ios::fixed, std::ios::floatfield );
+
+    /*if (argv[1]==NULL || argv[2]==NULL || argv[3]==NULL)
     {
         std::cout << "Error: Missing arguments!" << std::endl;
         std::cout << "Syntax: ./NeuralNetIntAddition [eta] [tss] [hls]" << std::endl;
@@ -24,45 +26,45 @@ int main(int argc, char *argv[])
     int hls = atoi(argv[3]);
 
     std::cout << "eta: " << eta << " tss: " << tss  << " hls: " << hls << std::endl;
-
+    */
 
     std::vector<double> input;
     std::vector<double> desired;
     std::vector<double> output;
 
+    /*
     RandomInt irandgen; // Train with a set of 10000
     std::vector<int> irand(tss);
     irandgen.FillVector(irand,0,100000);
     irandgen.Clear();
 
     NeuralNetwork nn(32,hls,32,eta);
+    */
 
-    //double eta = 5.0;
+    double eta = 5.0;
 
-    //NeuralNetwork nn(3,2,3,eta);
+    NeuralNetwork nn(2,6,2,eta);
 
     int ep=0;
     //int i=100;
 
-    /*input.push_back(1.0);
-    input.push_back(0.0);
+    input.push_back(1.0);
     input.push_back(0.0);
 
     desired.push_back(0.0);
     desired.push_back(1.0);
-    desired.push_back(0.0);*/
 
-    while (ep<10)
+    while (ep<4)
     {
         std::cout << "\n |---------STARING EPOCH " << ep << "----------|\n";
-        std::cout << "\n Randomizing Training Data...\n";
-        std::random_shuffle(irand.begin(),irand.end());
+        //std::cout << "\n Randomizing Training Data...\n";
+        //std::random_shuffle(irand.begin(),irand.end());
 
-        for (auto&& i : irand)
-        {
+        //for (auto&& i : irand)
+        //{
             //Begin Neural Network Computation
-            input = ProduceBinaryVector(i);
-            desired = ProduceBinaryVector(i+1);
+            //input = ProduceBinaryVector(i);
+            //desired = ProduceBinaryVector(i+1);
 
             nn.NewTrainingData(input,desired);
             nn.ComputeLayers();
@@ -70,21 +72,23 @@ int main(int argc, char *argv[])
 
             nn.GetOutput(output);
 
-            /*std::cout << "\n Output: ";
+            std::cout << "\n Output: ";
             for (auto&& op : output)
                 std::cout << std::setprecision(5) << " " << op;
-            std::cout << std::endl;*/
+            std::cout << std::endl;
 
             nn.ResetForNewTrainingData();
-        }
+        //}
 
         nn.CompleteTrainingSet();
 
         ++ep;
     }
 
-    input = ProduceBinaryVector(1000);
-    desired = ProduceBinaryVector(1001);
+    std::cout << "\n |---------TRAINING COMPLETE----------|\n";
+
+    //input = ProduceBinaryVector(1000);
+    //desired = ProduceBinaryVector(1001);
 
     nn.NewTrainingData(input,desired);
     nn.ComputeLayers();

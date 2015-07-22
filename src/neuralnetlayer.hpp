@@ -5,6 +5,7 @@
 #include <cstring>
 #include <math.h>
 #include <fstream>
+#include <iomanip>
 
 #include "tools/random.hpp"
 
@@ -37,6 +38,8 @@ class NeuralNetLayer
     // The sigmoid function
     void SigmoidFuncOnActivation()
     {
+        std::cout << "   Activations for layer:" << std::endl;
+
         for (int i=0; i<Nn; ++i)
         {
             if (fabs(z[i])>150)
@@ -45,10 +48,10 @@ class NeuralNetLayer
             }
             else
             {
-                a[i]=exp(-z[i])/pow(1.0+exp(-z[i]),2);
+                a[i]=1.0/(1.0+exp(-z[i]));
             }
 
-            a[i]=1.0/(1.0+exp(-z[i]));
+            std::cout << std::setprecision(5) << "    a[" << i <<"] = " << "1.0/(1.0+exp(" << z[i] << ")) = " << a[i] << std::endl;
 
             if (a[i]!=a[i])
             {
@@ -62,6 +65,7 @@ class NeuralNetLayer
     //The derivative of the sigmoid function
     void SigmoidFuncPrimeOnError()
     {
+        std::cout << "   Sigmoid Prime:" << std::endl;
         for (int i=0; i<Nn; ++i)
         {
             if (fabs(z[i])>150)
@@ -72,6 +76,8 @@ class NeuralNetLayer
             {
                 d[i]=exp(-z[i])/pow(1.0+exp(-z[i]),2);
             }
+
+            std::cout << std::setprecision(5) << "    d[" << i <<"] = " << -z[i] <<"/(1.0+exp(" << -z[i] << ")) = " << d[i] << std::endl;
 
             if (d[i]!=d[i])
             {
@@ -136,20 +142,24 @@ public:
             z[i]=0.0;
             for (int j=0; j<Nw; ++j)
             {
-                z[i]+=w[j+i*Nw]*ia[i];
+                z[i]+=w[j+i*Nw]*ia[j]; // THIS INDEXES ia[j] NOT ia[i]!!!!!!!!!!! One major issue with the code!!!
 
-                if (isinf(w[j+i*Nw]*ia[i]))
+                if (isinf(w[j+i*Nw]*ia[j]))
                 {
                   z[i]=1.0e+296;
                 }
 
+                std::cout << std::setprecision(5) << "    w[j+i*Nw]* ia[i] = (" << i << "," << j << "," << j+i*Nw << ") "<< w[j+i*Nw] << " * " << ia[j] << " = " << w[j+i*Nw]*ia[j] << std::endl;
+
                 if (z[i]!=z[i])
                 {
                     std::cout << " NAN DETECTED (ComputeActivation in loop) z: " << z[i] << std::endl;
-                    std::cout << " w[j+i*Nw]* ia[i] = (" << j+i*Nw << ") "<< w[j+i*Nw] << " * " << ia[i] << " = " << w[j+i*Nw]*ia[i] << std::endl;
+                    std::cout << " w[j+i*Nw]* ia[i] = (" << j+i*Nw << ") "<< w[j+i*Nw] << " * " << ia[i] << " = " << w[j+i*Nw]*ia[j] << std::endl;
                     exit(1);
                 }
             }
+
+            std::cout << std::setprecision(5) << "    Z[" << i <<"] =" << z[i] << " + " << b[i] << " = " << z[i]+b[i] << std::endl;
 
             z[i]+=b[i];
 
@@ -178,7 +188,10 @@ public:
 
         for (int i=0; i<Nn; ++i)
         {
+            std::cout << std::setprecision(5) << "   Neuron(" << i << "): " << (a[i]-de[i])*d[i] << " = (" << a[i] << "-" << de[i] << ") * " << d[i] << std::endl;
+
             d[i]=(a[i]-de[i])*d[i];
+
             if (d[i]!=d[i])
             {
                 std::cout << " NAN DETECTED (ComputeInitalError) d[i]: " << d[i] << std::endl;
@@ -200,11 +213,12 @@ public:
 
             for (int j=0; j<lp1.Nn; ++j)
             {
-                //std::cout << " iidx: " << i << " of k: " << Nn << " j: " << lp1.Nn << std::endl;
-                //std::cout << " jidx: " << j << " of k: " << Nw << " j: " << lp1.Nw << std::endl;
+                std::cout << "   iidx: " << i << " of k: " << Nn << " j: " << lp1.Nn << std::endl;
+                std::cout << "   jidx: " << j << " of k: " << Nw << " j: " << lp1.Nw << std::endl;
 
                 sum+=lp1.Getw()[j*lp1.Nw+i]*lp1.Getd()[j];
 
+                std::cout << std::setprecision(5) << "   MATMUL(" << i << "," << j << "," << j+i*Nw << "): " << sum << " = " << lp1.Getw()[j*lp1.Nw+i]<< " * " << lp1.Getd()[j] << std::endl;
 
                 if (sum != sum  || isinf(sum))
                 {
@@ -214,7 +228,10 @@ public:
                 }
             }
 
+            std::cout << std::setprecision(5) << "   Neuron(" << i <<"): " << sum*d[i] << " = " << sum << " * " << d[i] << std::endl;
+
             d[i]=sum*d[i];
+
             if (d[i]!=d[i] || isinf(d[i]))
             {
                 std::cout << " NAN DETECTED (ComputeError) d[i]: " << d[i] << std::endl;
@@ -230,7 +247,8 @@ public:
         for (int i=0; i<Nn; ++i)
         {
             dCdb[i] += d[i];
-            //std::cout << " dCdb[" << i << "]=" << dCdb[i] << "\n";
+            std::cout <<  std::setprecision(5) << "   dCdb[" << i << "]=" << dCdb[i] << "\n";
+
             /*if (dCdb[i] != dCdb[i])
             {
                 std::cout << " NAN DETECTED (ComputeDerivatives) dCdb[i]: " << dCdb[i] << std::endl;
@@ -249,7 +267,7 @@ public:
             for (int j=0; j<Nw; ++j)
             {
                 dCdw[j+i*Nw] += am1[j]*d[i];
-                //std::cout << " dCdw[" << i << "," << j << "]=" << dCdw[j+i*Nw] << "\n";
+                std::cout <<  std::setprecision(5) << "   dCdw[" << i << "," << j << "]= " << dCdw[j+i*Nw] << " += " << am1[j] << " * " << d[i] << "\n";
                 /*if (dCdw[j+i*Nw] != dCdw[j+i*Nw])
                 {
                     std::cout << " NAN DETECTED (ComputeDerivatives) dCdw[j+i*Nw]: " << dCdw[j+i*Nw] << std::endl;
@@ -257,6 +275,8 @@ public:
                     exit(1);
                 }*/
             }
+
+            //std::cout << "   TOTAL dCdw[" << i << "]= " << dCdw[j+i*Nw] << "\n";
         }
 
         ++cntr;
