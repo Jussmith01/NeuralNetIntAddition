@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
+#include <algorithm>
 
 #include "tools/binaryconversion.hpp"
 #include "neuralnet.h"
@@ -24,6 +25,7 @@ int main(int argc, char *argv[])
 
     std::cout << "eta: " << eta << " tss: " << tss  << " hls: " << hls << std::endl;
 
+
     std::vector<double> input;
     std::vector<double> desired;
     std::vector<double> output;
@@ -35,10 +37,27 @@ int main(int argc, char *argv[])
 
     NeuralNetwork nn(32,hls,32,eta);
 
+    //double eta = 5.0;
+
+    //NeuralNetwork nn(3,2,3,eta);
+
     int ep=0;
     //int i=100;
-    while (ep<500)
+
+    /*input.push_back(1.0);
+    input.push_back(0.0);
+    input.push_back(0.0);
+
+    desired.push_back(0.0);
+    desired.push_back(1.0);
+    desired.push_back(0.0);*/
+
+    while (ep<10)
     {
+        std::cout << "\n |---------STARING EPOCH " << ep << "----------|\n";
+        std::cout << "\n Randomizing Training Data...\n";
+        std::random_shuffle(irand.begin(),irand.end());
+
         for (auto&& i : irand)
         {
             //Begin Neural Network Computation
@@ -48,10 +67,19 @@ int main(int argc, char *argv[])
             nn.NewTrainingData(input,desired);
             nn.ComputeLayers();
             nn.ComputeDerivatives();
+
+            nn.GetOutput(output);
+
+            /*std::cout << "\n Output: ";
+            for (auto&& op : output)
+                std::cout << std::setprecision(5) << " " << op;
+            std::cout << std::endl;*/
+
             nn.ResetForNewTrainingData();
         }
 
         nn.CompleteTrainingSet();
+
         ++ep;
     }
 
