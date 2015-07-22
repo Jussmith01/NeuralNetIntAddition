@@ -35,7 +35,7 @@ class NeuralNetLayer
     {
         for (int i=0; i<Nn; ++i)
         {
-            if (fabs(z[i])>100)
+            if (fabs(z[i])>150)
             {
                 a[i]=0.0;
             }
@@ -60,7 +60,7 @@ class NeuralNetLayer
     {
         for (int i=0; i<Nn; ++i)
         {
-            if (fabs(z[i])>100)
+            if (fabs(z[i])>150)
             {
                 d[i]=0.0;
             }
@@ -114,9 +114,9 @@ public:
         memset(&dCdb[0],0,Nn*sizeof(float));
 
         NormRandomReal randgen;
-        randgen.FillVector(w,0.0,1.0);
+        randgen.FillVector(w,0.0,2.5,74322678);
         randgen.Clear();
-        randgen.FillVector(b,0.0,1.0);
+        randgen.FillVector(b,0.0,2.5,19883278);
         randgen.Clear();
 
         cntr=0;
@@ -224,12 +224,12 @@ public:
         {
             dCdb[i] += d[i];
             //std::cout << " dCdb[" << i << "]=" << dCdb[i] << "\n";
-            if (dCdb[i] != dCdb[i])
+            /*if (dCdb[i] != dCdb[i])
             {
                 std::cout << " NAN DETECTED (ComputeDerivatives) dCdb[i]: " << dCdb[i] << std::endl;
                 std::cout << " d[i]: " << d[i] << std::endl;
                 exit(1);
-            }
+            }*/
         }
 
         if (int(am1.size()) != Nw)
@@ -243,12 +243,12 @@ public:
             {
                 dCdw[j+i*Nw] += am1[j]*d[i];
                 //std::cout << " dCdw[" << i << "," << j << "]=" << dCdw[j+i*Nw] << "\n";
-                if (dCdw[j+i*Nw] != dCdw[j+i*Nw])
+                /*if (dCdw[j+i*Nw] != dCdw[j+i*Nw])
                 {
                     std::cout << " NAN DETECTED (ComputeDerivatives) dCdw[j+i*Nw]: " << dCdw[j+i*Nw] << std::endl;
                     std::cout << " am1[j]: " << am1[j] << " d[i]: " << d[i] << std::endl;
                     exit(1);
-                }
+                }*/
             }
         }
 
@@ -261,28 +261,28 @@ public:
         for (int i=0; i<Nn; ++i)
         {
             b[i] = b[i] - eta*dCdb[i]/double(cntr);
-            if (b[i] != b[i])
+            /*if (b[i] != b[i])
             {
                 std::cout << " NAN DETECTED (EndTrainingSet) b[i]: " << b[i] << std::endl;
                 std::cout << " eta: " << eta << " dCdb[i]: " << dCdb[i] << " cntr: " << double(cntr) << std::endl;
                 exit(1);
-            }
+            }*/
         }
 
         for (int i=0; i<Nn; ++i)
         {
             for (int j=0; j<Nw; ++j)
             {
-                double store = w[j+i*Nw];
+                //double store = w[j+i*Nw];
                 w[j+i*Nw] += w[j+i*Nw] - eta * dCdw[j+i*Nw];
                 //std::cout << " dCdw[" << i << "," << j << "=" << j+i*Nw << "]=" << dCdw[j+i*Nw] << "\n";
-                if (w[j+i*Nw] != w[j+i*Nw])
+                /*if (w[j+i*Nw] != w[j+i*Nw])
                 {
                     std::cout << " NAN DETECTED (EndTrainingSet) w[j+i*Nw]: " << w[j+i*Nw] << std::endl;
                     std::cout << " TEST: " << store - eta * dCdw[j+i*Nw] << std::endl;
                     std::cout << " eta: " << eta << " dCdw[i]: " << dCdw[j+i*Nw] << " w[j+i*Nw]old: " << store << std::endl;
                     exit(1);
-                }
+                }*/
             }
         }
 

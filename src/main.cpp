@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <vector>
 
 #include "tools/binaryconversion.hpp"
@@ -21,7 +22,7 @@ int main(int argc, char *argv[])
     int tss = atoi(argv[2]);
     int hls = atoi(argv[3]);
 
-    std::cout << "eta: " << eta << " tss: " << tss << std::endl;
+    std::cout << "eta: " << eta << " tss: " << tss  << " hls: " << hls << std::endl;
 
     std::vector<double> input;
     std::vector<double> desired;
@@ -35,7 +36,8 @@ int main(int argc, char *argv[])
     NeuralNetwork nn(32,hls,32,eta);
 
     int ep=0;
-    while (ep<50)
+    //int i=100;
+    while (ep<5000)
     {
         for (auto&& i : irand)
         {
@@ -53,9 +55,36 @@ int main(int argc, char *argv[])
         ++ep;
     }
 
-    //nn.GetOutput(output);
-    //value = ProduceIntegerFromBinary(output);
-    //std::cout << value << std::endl;
+    input = ProduceBinaryVector(1000);
+    desired = ProduceBinaryVector(1001);
+
+    nn.NewTrainingData(input,desired);
+    nn.ComputeLayers();
+
+    nn.GetOutput(output);
+
+    std::cout << "Input:  ";
+    for (auto&& op : input)
+        std::cout << " " << round(op);
+    std::cout << std::endl;
+
+    std::cout << "Desire: ";
+    for (auto&& op : desired)
+        std::cout << " " << round(op);
+    std::cout << std::endl;
+
+    std::cout << "Output: ";
+    for (auto&& op : output)
+        std::cout << " " << round(op);
+    std::cout << std::endl;
+
+    std::cout << "Output: ";
+    for (auto&& op : output)
+        std::cout << std::setprecision(5) << " " << op;
+    std::cout << std::endl;
+
+    int value = ProduceIntegerFromBinary(output);
+    std::cout << value << std::endl;
 
     nn.Clear();
 

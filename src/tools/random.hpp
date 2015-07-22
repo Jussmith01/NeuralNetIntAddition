@@ -39,18 +39,19 @@ class NormRandomReal
         {
                 time_t Time;
                 time(&Time);
-                int seedOffset=(int)Time;
+                int seedOffset=(int)Time+clock();
 
                 array.resize(w);
 
                 int t = (int)omp_get_wtime()+i;
-                std::seed_seq seed = {seedOffset,t,i+100};
+                std::seed_seq seed = {seedOffset,t,i};
                 seed.generate(array.begin(),array.end());//Seed the generator
                 index = 0;
         };
 
         double GenRandReal(double mean,double stdv)
         {
+                //std::cout << " " << array[index];
                 generator.seed(array[index]);//Seed the generator
                 std::normal_distribution<double> distribution(mean,stdv);//Setup the distribution
                 double RN = (double)distribution(generator);//Denerate the random number
@@ -59,22 +60,19 @@ class NormRandomReal
                 return RN;
         };
 
-        void FillVector(std::vector<double> &vec,double mean,double stdv)
+        void FillVector(std::vector<double> &vec,double mean,double stdv,int seed)
         {
             int N = vec.size();
-            Setup(N,1728);
+            Setup(N,seed);
 
-            std::cout << " Generating (" << N  << ") random numbers." << std::endl;
+            //std::cout << " Generating (" << N  << ") random numbers." << std::endl;
 
             for (auto&& v : vec)
             {
                 v=GenRandReal(mean,stdv);
-                if (v!=v)
-                {
-                    std::cout << " NAN DETECTED (NormalRandomGenerator) v: " << v << std::endl;
-                    exit(1);
-                }
+                //std::cout << v << " ";
             }
+            //std::cout << "\n";
         };
 
         void Clear()

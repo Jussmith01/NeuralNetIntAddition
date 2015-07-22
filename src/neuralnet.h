@@ -17,8 +17,9 @@ class NeuralNetwork
     double avgCost;
     long int cntr;
 
-    NeuralNetLayer nnl;
-    NeuralNetLayer nno;
+    NeuralNetLayer nnl1; // Hidden layer 1
+    //NeuralNetLayer nnl2; // Hidden layer 2
+    NeuralNetLayer nno; // The output layer
 
     NeuralNetwork() {};
 
@@ -31,7 +32,8 @@ public:
         //this->de=de;
         this->eta=eta;
 
-        nnl.Init(iptN,midN);
+        nnl1.Init(iptN,midN);
+        //nnl2.Init(midN,midN);
         nno.Init(midN,outN);
 
         cntr=0;
@@ -46,8 +48,9 @@ public:
 
     void ComputeLayers()
     {
-        nnl.ComputeActivation(ila);
-        nno.ComputeActivation(nnl.GetActivation());// Getting Nanners????!!!!
+        nnl1.ComputeActivation(ila);
+        //nnl2.ComputeActivation(nnl1.GetActivation());
+        nno.ComputeActivation(nnl1.GetActivation());// Getting Nanners????!!!!
 
         ola=nno.GetActivation();
 
@@ -57,11 +60,15 @@ public:
 
     void ComputeDerivatives()
     {
+        // Backpropagate
         nno.ComputeInitalError(de);
-        nnl.ComputeError(nno);
+        //nnl2.ComputeError(nno);
+        nnl1.ComputeError(nno);
 
-        nnl.ComputeDerivatives(ila);
-        nno.ComputeDerivatives(nnl.GetActivation());
+        // Calculate Derivatives
+        nnl1.ComputeDerivatives(ila);
+        //nnl2.ComputeDerivatives(nnl1.GetActivation());
+        nno.ComputeDerivatives(nnl1.GetActivation());
     };
 
     double CalculateCost()
@@ -97,7 +104,8 @@ public:
         std::cout << " avgCost of training set: " << avgCost/double(cntr) << std::endl;
         //ResetForNewTrainingData();
 
-        nnl.EndTrainingSet(eta);
+        nnl1.EndTrainingSet(eta);
+        //nnl2.EndTrainingSet(eta);
         nno.EndTrainingSet(eta);
 
         cntr=0;
@@ -106,7 +114,8 @@ public:
 
     void Clear()
     {
-        nnl.Clear();
+        nnl1.Clear();
+        //nnl2.Clear();
         nno.Clear();
         ila.clear();
         ola.clear();
