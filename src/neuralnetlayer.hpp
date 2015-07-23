@@ -42,16 +42,16 @@ class NeuralNetLayer
 
         for (int i=0; i<Nn; ++i)
         {
-            if (fabs(z[i])>150)
+            /*if (fabs(z[i])>500)
             {
                 a[i]=0.0;
             }
             else
-            {
+            {*/
                 a[i]=1.0/(1.0+exp(-z[i]));
-            }
+            //}
 
-            std::cout << std::setprecision(5) << "    a[" << i <<"] = " << "1.0/(1.0+exp(" << z[i] << ")) = " << a[i] << std::endl;
+            std::cout << std::setprecision(5) << "    a[" << i <<"] = " << "1.0/(1.0+exp(" << -z[i] << ")) = " << a[i] << std::endl;
 
             if (a[i]!=a[i])
             {
@@ -68,16 +68,16 @@ class NeuralNetLayer
         std::cout << "   Sigmoid Prime:" << std::endl;
         for (int i=0; i<Nn; ++i)
         {
-            if (fabs(z[i])>150)
+            if (fabs(z[i])>500)
             {
                 d[i]=0.0;
             }
             else
             {
-                d[i]=exp(-z[i])/pow(1.0+exp(-z[i]),2);
+                d[i]=exp(z[i])/pow(1.0+exp(z[i]),2);
             }
 
-            std::cout << std::setprecision(5) << "    d[" << i <<"] = " << -z[i] <<"/(1.0+exp(" << -z[i] << ")) = " << d[i] << std::endl;
+            std::cout << std::setprecision(5) << "    d[" << i <<"] = " << z[i] <<"/(1.0+exp(" << z[i] << ")) = " << d[i] << std::endl;
 
             if (d[i]!=d[i])
             {
@@ -149,7 +149,7 @@ public:
                   z[i]=1.0e+296;
                 }
 
-                std::cout << std::setprecision(5) << "    w[j+i*Nw]* ia[i] = (" << i << "," << j << "," << j+i*Nw << ") "<< w[j+i*Nw] << " * " << ia[j] << " = " << w[j+i*Nw]*ia[j] << std::endl;
+                std::cout << std::setprecision(5) << "    w[" << j << "+" << i << "*" << Nw << "]* ia[" << j << "] (" << j+i*Nw << ") = "<< w[j+i*Nw] << " * " << ia[j] << " = " << w[j+i*Nw]*ia[j] << std::endl;
 
                 if (z[i]!=z[i])
                 {
@@ -159,7 +159,7 @@ public:
                 }
             }
 
-            std::cout << std::setprecision(5) << "    Z[" << i <<"] =" << z[i] << " + " << b[i] << " = " << z[i]+b[i] << std::endl;
+            std::cout << std::setprecision(5) << "     Z[" << i <<"] =" << z[i] << " + " << b[i] << " = " << z[i]+b[i] << std::endl;
 
             z[i]+=b[i];
 
@@ -213,12 +213,13 @@ public:
 
             for (int j=0; j<lp1.Nn; ++j)
             {
+                std::cout << "   |------New Element-----|" << std::endl;
                 std::cout << "   iidx: " << i << " of k: " << Nn << " j: " << lp1.Nn << std::endl;
                 std::cout << "   jidx: " << j << " of k: " << Nw << " j: " << lp1.Nw << std::endl;
 
                 sum+=lp1.Getw()[j*lp1.Nw+i]*lp1.Getd()[j];
 
-                std::cout << std::setprecision(5) << "   MATMUL(" << i << "," << j << "," << j+i*Nw << "): " << sum << " = " << lp1.Getw()[j*lp1.Nw+i]<< " * " << lp1.Getd()[j] << std::endl;
+                std::cout << std::setprecision(5) << "    MATMUL(" << i << "," << j << "," << j+i*Nw << "): " << sum << " = " << lp1.Getw()[j*lp1.Nw+i]<< " * " << lp1.Getd()[j] << std::endl;
 
                 if (sum != sum  || isinf(sum))
                 {
@@ -228,7 +229,7 @@ public:
                 }
             }
 
-            std::cout << std::setprecision(5) << "   Neuron(" << i <<"): " << sum*d[i] << " = " << sum << " * " << d[i] << std::endl;
+            std::cout << std::setprecision(5) << "     Neuron(" << i <<"): " << sum*d[i] << " = " << sum << " * " << d[i] << std::endl;
 
             d[i]=sum*d[i];
 
@@ -301,7 +302,7 @@ public:
             for (int j=0; j<Nw; ++j)
             {
                 double store = w[j+i*Nw];
-                w[j+i*Nw] += w[j+i*Nw] - eta * dCdw[j+i*Nw];
+                w[j+i*Nw] = w[j+i*Nw] - eta * dCdw[j+i*Nw];
 
                 if (w[j+i*Nw] > 1000)
                 {
@@ -333,10 +334,11 @@ public:
         }
 
         bgraph << val/double(Nn) << std::endl;
+        //bgraph << dCdb[0] << std::endl;
 
         cntr=0;
-        dCdw.clear();
-        dCdb.clear();
+        memset(&dCdb[0],0,sizeof(double)*dCdb.size());
+        memset(&dCdw[0],0,sizeof(double)*dCdw.size());
     };
 
     //**************************//

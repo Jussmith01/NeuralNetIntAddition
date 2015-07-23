@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 
     double eta = 5.0;
 
-    NeuralNetwork nn(2,6,2,eta);
+    NeuralNetwork nn(2,3,2,eta);
 
     int ep=0;
     //int i=100;
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     desired.push_back(0.0);
     desired.push_back(1.0);
 
-    while (ep<4)
+    while (ep<10)
     {
         std::cout << "\n |---------STARING EPOCH " << ep << "----------|\n";
         //std::cout << "\n Randomizing Training Data...\n";
