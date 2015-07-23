@@ -8,13 +8,14 @@
 
 int main(int argc, char *argv[])
 {
-    if (argv[1]==NULL || argv[2]==NULL || argv[3]==NULL)
+    if (argv[1]==NULL || argv[2]==NULL || argv[3]==NULL  || argv[4]==NULL)
     {
         std::cout << "Error: Missing arguments!" << std::endl;
         std::cout << "Syntax: ./NeuralNetIntAddition [eta] [tss] [hls]" << std::endl;
         std::cout << "   eta: The learning rate" << std::endl;
         std::cout << "   tss: The training set size" << std::endl;
         std::cout << "   hls: The hidden layer size" << std::endl;
+        std::cout << "   ns : Number of training epochs" << std::endl;
 
         exit(1);
     }
@@ -22,6 +23,7 @@ int main(int argc, char *argv[])
     double eta = atof(argv[1]);
     int tss = atoi(argv[2]);
     int hls = atoi(argv[3]);
+    int ns = atoi(argv[4]);
 
     std::cout << "eta: " << eta << " tss: " << tss  << " hls: " << hls << std::endl;
 
@@ -39,7 +41,7 @@ int main(int argc, char *argv[])
 
     int ep=0;
 
-    while (ep<30)
+    while (ep<ns)
     {
         //std::cout << "\n |---------STARING EPOCH " << ep << "----------|\n";
         //std::cout << "\n Randomizing Training Data...\n";

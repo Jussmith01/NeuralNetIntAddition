@@ -39,14 +39,14 @@ class NeuralNetLayer
     {
         for (int i=0; i<Nn; ++i)
         {
-            if (fabs(z[i])>150)
+            /*if (fabs(z[i])>150)
             {
                 a[i]=0.0;
             }
             else
-            {
+            {*/
                 a[i]=1.0/(1.0+exp(-z[i]));
-            }
+            //}
 
             if (a[i]!=a[i])
             {
@@ -62,7 +62,7 @@ class NeuralNetLayer
     {
         for (int i=0; i<Nn; ++i)
         {
-            if (fabs(z[i])>150)
+            if (fabs(z[i])>500)
             {
                 d[i]=0.0;
             }
@@ -74,7 +74,7 @@ class NeuralNetLayer
             if (d[i]!=d[i])
             {
                 std::cout << " NAN DETECTED (SigmoidFuncPrime) d[i]: " << d[i] << std::endl;
-                std::cout << " z[i]: " << z[i] << " exp(-z[i]): " << exp(-z[i]) << std::endl;
+                std::cout << " z[i]: " << z[i] << " exp(z[i]): " << exp(z[i]) << std::endl;
                 exit(1);
             }
         }
@@ -279,7 +279,7 @@ public:
             for (int j=0; j<Nw; ++j)
             {
                 double store = w[j+i*Nw];
-                w[j+i*Nw] += w[j+i*Nw] - eta * dCdw[j+i*Nw];
+                w[j+i*Nw] = w[j+i*Nw] - eta * dCdw[j+i*Nw]/double(cntr);
 
                 if (w[j+i*Nw] > 1000)
                 {
@@ -313,8 +313,8 @@ public:
         bgraph << val/double(Nn) << std::endl;
 
         cntr=0;
-        dCdw.clear();
-        dCdb.clear();
+        memset(&dCdb[0],0,sizeof(double)*dCdb.size());
+        memset(&dCdw[0],0,sizeof(double)*dCdw.size());
     };
 
     //**************************//
