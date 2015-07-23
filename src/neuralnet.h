@@ -13,12 +13,14 @@ class NeuralNetwork
     std::vector<double> ola; // Output Layer Activation
     std::vector<double> de; // Desired outcome
 
+    double prevcost;
+
     double eta;
     double avgCost;
     long int cntr;
 
     NeuralNetLayer nnl1; // Hidden layer 1
-    //NeuralNetLayer nnl2; // Hidden layer 2
+    NeuralNetLayer nnl2; // Hidden layer 2
     NeuralNetLayer nno; // The output layer
 
     NeuralNetwork() {};
@@ -33,11 +35,12 @@ public:
         this->eta=eta;
 
         nnl1.Init(iptN,midN,"Hidden1bgraph.dat");
-        //nnl2.Init(midN,midN);
+        nnl2.Init(midN,midN,"Hidden2bgraph.dat");
         nno.Init(midN,outN,"Output1bgraph.dat");
 
         cntr=0;
         avgCost=0;
+        prevcost=1000.0;
     };
 
     void NewTrainingData(std::vector<double> &ila,std::vector<double> &de)
@@ -49,8 +52,8 @@ public:
     void ComputeLayers()
     {
         nnl1.ComputeActivation(ila);
-        //nnl2.ComputeActivation(nnl1.GetActivation());
-        nno.ComputeActivation(nnl1.GetActivation());// Getting Nanners????!!!!
+        nnl2.ComputeActivation(nnl1.GetActivation());
+        nno.ComputeActivation(nnl2.GetActivation());// Getting Nanners????!!!!
 
         ola=nno.GetActivation();
 
@@ -62,13 +65,13 @@ public:
     {
         // Backpropagate
         nno.ComputeInitalError(de);
-        //nnl2.ComputeError(nno);
-        nnl1.ComputeError(nno);
+        nnl2.ComputeError(nno);
+        nnl1.ComputeError(nnl2);
 
         // Calculate Derivatives
         nnl1.ComputeDerivatives(ila);
-        //nnl2.ComputeDerivatives(nnl1.GetActivation());
-        nno.ComputeDerivatives(nnl1.GetActivation());
+        nnl2.ComputeDerivatives(nnl1.GetActivation());
+        nno.ComputeDerivatives(nnl2.GetActivation());
     };
 
     double CalculateCost()
@@ -100,17 +103,29 @@ public:
         this->ola.clear();
     };
 
-    void CompleteTrainingSet()
+    double CompleteTrainingSet()
     {
-        std::cout << "  avgCost of training set: " << avgCost/double(cntr) << std::endl;
+        double currentcost = avgCost/double(cntr);
+        std::cout << "avgCost of training set: " << currentcost << " ";
         //ResetForNewTrainingData();
 
+        if (prevcost-currentcost < 0.0)
+        {
+            Halfeta();
+            std::cout << "eta now: " << eta;
+        }
+
+        std::cout << std::endl;
+        prevcost=currentcost;
+
         nnl1.EndTrainingSet(eta);
-        //nnl2.EndTrainingSet(eta);
+        nnl2.EndTrainingSet(eta);
         nno.EndTrainingSet(eta);
 
         cntr=0;
         avgCost=0.0;
+
+        return currentcost;
     };
 
     void Clear()
@@ -121,6 +136,11 @@ public:
         ila.clear();
         ola.clear();
     };
+
+    void Halfeta()
+    {
+        eta=0.95*eta;
+    }
 };
 
 #endif

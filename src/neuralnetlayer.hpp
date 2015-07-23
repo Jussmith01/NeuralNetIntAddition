@@ -48,12 +48,12 @@ class NeuralNetLayer
                 a[i]=1.0/(1.0+exp(-z[i]));
             //}
 
-            if (a[i]!=a[i])
+            /*if (a[i]!=a[i])
             {
                 std::cout << " NAN DETECTED (SigmoidFunc) a: " << a[i] << std::endl;
                 std::cout << " z[i]: " << z[i] << " exp(-z[i]): " << exp(-z[i]) << std::endl;
                 exit(1);
-            }
+            }*/
         }
     };
 
@@ -62,21 +62,21 @@ class NeuralNetLayer
     {
         for (int i=0; i<Nn; ++i)
         {
-            if (fabs(z[i])>500)
+            /*if (fabs(z[i])>500)
             {
                 d[i]=0.0;
             }
             else
-            {
+            {*/
                 d[i]=exp(z[i])/pow(1.0+exp(z[i]),2);
-            }
+            //}
 
-            if (d[i]!=d[i])
+            /*if (d[i]!=d[i])
             {
                 std::cout << " NAN DETECTED (SigmoidFuncPrime) d[i]: " << d[i] << std::endl;
                 std::cout << " z[i]: " << z[i] << " exp(z[i]): " << exp(z[i]) << std::endl;
                 exit(1);
-            }
+            }*/
         }
     };
 
@@ -136,7 +136,7 @@ public:
             {
                 z[i]+=w[j+i*Nw]*ia[j];
 
-                if (isinf(w[j+i*Nw]*ia[j]))
+                /*if (isinf(w[j+i*Nw]*ia[j]))
                 {
                   z[i]=1.0e+296;
                 }
@@ -146,17 +146,17 @@ public:
                     std::cout << " NAN DETECTED (ComputeActivation in loop) z: " << z[i] << std::endl;
                     std::cout << " w[j+i*Nw]* ia[i] = (" << j+i*Nw << ") "<< w[j+i*Nw] << " * " << ia[j] << " = " << w[j+i*Nw]*ia[j] << std::endl;
                     exit(1);
-                }
+                }*/
             }
 
             z[i]+=b[i];
 
-            if (z[i]!=z[i])
+            /*if (z[i]!=z[i])
             {
                 std::cout << " NAN DETECTED (ComputeActivation) z: " << z[i] << std::endl;
                 std::cout << " b[i]: " << b[i] << std::endl;
                 exit(1);
-            }
+            }*/
         }
 
         SigmoidFuncOnActivation();
@@ -165,7 +165,7 @@ public:
     // This should only be used on the LAST layer/first layer in the backpropagation
     void ComputeInitalError(std::vector<double> &de)
     {
-        if (de.size() != d.size())
+       if (de.size() != d.size())
         {
             std::cout << "Error: de.size != d.size in ComputeInitalError.\n";
         }
@@ -177,11 +177,11 @@ public:
         for (int i=0; i<Nn; ++i)
         {
             d[i]=(a[i]-de[i])*d[i];
-            if (d[i]!=d[i])
+            /*if (d[i]!=d[i])
             {
                 std::cout << " NAN DETECTED (ComputeInitalError) d[i]: " << d[i] << std::endl;
                 exit(1);
-            }
+            }*/
         }
     };
 
@@ -204,21 +204,21 @@ public:
                 sum+=lp1.Getw()[j*lp1.Nw+i]*lp1.Getd()[j];
 
 
-                if (sum != sum  || isinf(sum))
+                /*if (sum != sum  || isinf(sum))
                 {
                     std::cout << " NAN DETECTED (ComputeError in loop) sum: " << sum << std::endl;
                     std::cout << " lp1.Getw()[j+i*lp1.Nw]: " << lp1.Getw()[j+i*lp1.Nw] << " lp1.Getd()[i]: " << lp1.Getd()[i] << std::endl;
                     exit(1);
-                }
+                }*/
             }
 
             d[i]=sum*d[i];
-            if (d[i]!=d[i] || isinf(d[i]))
+            /*if (d[i]!=d[i] || isinf(d[i]))
             {
                 std::cout << " NAN DETECTED (ComputeError) d[i]: " << d[i] << std::endl;
                 std::cout << " sum: " << sum << std::endl;
                 exit(1);
-            }
+            }*/
         }
     };
 
@@ -266,22 +266,22 @@ public:
         for (int i=0; i<Nn; ++i)
         {
             b[i] = b[i] - eta*dCdb[i]/double(cntr);
-            if (b[i] != b[i])
+            /*if (b[i] != b[i])
             {
                 std::cout << " NAN DETECTED (EndTrainingSet) b[i]: " << b[i] << std::endl;
                 std::cout << " eta: " << eta << " dCdb[i]: " << dCdb[i] << " cntr: " << double(cntr) << std::endl;
                 exit(1);
-            }
+            }*/
         }
 
         for (int i=0; i<Nn; ++i)
         {
             for (int j=0; j<Nw; ++j)
             {
-                double store = w[j+i*Nw];
+                //double store = w[j+i*Nw];
                 w[j+i*Nw] = w[j+i*Nw] - eta * dCdw[j+i*Nw]/double(cntr);
 
-                if (w[j+i*Nw] > 1000)
+                /*if (w[j+i*Nw] > 1000)
                 {
                     w[j+i*Nw]=1000.0;
                 }
@@ -300,7 +300,7 @@ public:
                     std::cout << " TEST: " << store - eta * dCdw[j+i*Nw] << std::endl;
                     std::cout << " eta: " << eta << " dCdw[i]: " << dCdw[j+i*Nw] << " w[j+i*Nw]old: " << store << std::endl;
                     exit(1);
-                }
+                }*/
             }
         }
 
