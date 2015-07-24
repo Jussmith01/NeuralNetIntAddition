@@ -9,14 +9,15 @@
 
 int main(int argc, char *argv[])
 {
-    if (argv[1]==NULL || argv[2]==NULL || argv[3]==NULL || argv[4]==NULL || argv[5]==NULL)
+    if (argv[1]==NULL || argv[2]==NULL || argv[3]==NULL || argv[4]==NULL || argv[5]==NULL || argv[6]==NULL)
     {
         std::cout << "Error: Missing arguments!" << std::endl;
-        std::cout << "Syntax: ./NeuralNetIntAddition [eta] [tss] [hls]" << std::endl;
+        std::cout << "Syntax: ./NeuralNetIntAddition [eta] [tss] [ess] [hls] [nns] [con]" << std::endl;
         std::cout << "   eta: The learning rate" << std::endl;
         std::cout << "   tss: The Training Set Size" << std::endl;
         std::cout << "   ess: The tEsting Set Size" << std::endl;
         std::cout << "   hls: The hidden layer size" << std::endl;
+        std::cout << "   nnd: The Neural Net Depth" << std::endl;
         std::cout << "   con : Convergence of average cost" << std::endl;
 
         exit(1);
@@ -26,9 +27,10 @@ int main(int argc, char *argv[])
     int tss = atoi(argv[2]);
     int ess = atoi(argv[3]);
     int hls = atoi(argv[4]);
-    double con = atof(argv[5]);
+    int nnd = atoi(argv[5]);
+    double con = atof(argv[6]);
 
-    std::cout << "eta: " << eta << " tss: " << tss  << " ess: " << ess << " hls: " << hls << " con: " << con << std::endl;
+    std::cout << "eta: " << eta << " tss: " << tss  << " ess: " << ess << " hls: " << hls << " nnd: " << nnd << " con: " << con << std::endl;
 
 
     std::vector<double> input;
@@ -40,7 +42,7 @@ int main(int argc, char *argv[])
     irandgen.FillVector(irand,-1000000,1000000);
     irandgen.Clear();
 
-    NeuralNetwork nn(32,hls,32,2,eta);
+    NeuralNetwork nn(32,hls,32,nnd,eta);
 
     int ep=0;
     double avgcost = 100.0;
@@ -50,11 +52,8 @@ int main(int argc, char *argv[])
     while (avgcost>con)
     {
         mt.start_point();
-        //std::cout << "\n |---------STARING EPOCH " << ep << "----------|\n";
-        //std::cout << "\n Randomizing Training Data...\n";
-        std::random_shuffle(irand.begin(),irand.end());
 
-        std::cout << irand.front() << std::endl;
+        std::random_shuffle(irand.begin(),irand.end());
 
         for (auto&& i : irand)
         //for (int i=0;i<(int)irand.size()/2;++i)
