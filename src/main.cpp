@@ -54,6 +54,8 @@ int main(int argc, char *argv[])
         //std::cout << "\n Randomizing Training Data...\n";
         std::random_shuffle(irand.begin(),irand.end());
 
+        std::cout << irand.front() << std::endl;
+
         for (auto&& i : irand)
         //for (int i=0;i<(int)irand.size()/2;++i)
         {
@@ -99,6 +101,8 @@ int main(int argc, char *argv[])
 
         if (value == irandtest[i]+1)
             ++correct;
+        else
+            std::cout << " Miss! " << value << " != " << irandtest[i]+1 << std::endl;
     }
 
     std::cout << "Accuracy:" << correct/double(ess) << std::endl;
