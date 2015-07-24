@@ -5,6 +5,7 @@
 #include <cstring>
 #include <math.h>
 #include <fstream>
+#include <omp.h>
 
 #include "tools/random.hpp"
 
@@ -28,8 +29,8 @@ class NeuralNetLayer
     int Nn; // Number of neurons in the layer
     int Nw; // Number of weights per neuron
 
-    std::ofstream wgraph;
-    std::ofstream bgraph;
+    //std::ofstream wgraph;
+    //std::ofstream bgraph;
 
     //***************************//
     //  Class Private Functions  //
@@ -52,17 +53,17 @@ public:
     //**************************//
     //    Class Constructors    //
     //**************************//
-    NeuralNetLayer() {};
+    NeuralNetLayer() {cntr=0;};
 
-    NeuralNetLayer(int Nw,int Nn,std::string graph1)
+    /*NeuralNetLayer(int Nw,int Nn,std::string graph1)
     {
         Init(Nw,Nn,graph1);
-    };
+    };*/
 
     //***************************//
     // Class Operation Functions //
     //***************************//
-    void Init(int Nw,int Nn,std::string graph1)
+    void Init(int Nw,int Nn)
     {
         this->Nn=Nn;
         this->Nw=Nw;
@@ -84,10 +85,8 @@ public:
         randgen.FillVector(b,0.0,1.0,19883278);
         randgen.Clear();
 
-        wgraph.open("wgraph.dat");
-        bgraph.open(graph1.c_str());
-
-        cntr=0;
+        //wgraph.open("wgraph.dat");
+        //bgraph.open(graph1.c_str());
     };
 
     void ComputeActivation(std::vector<double> &ia) // ia must be of nw size
@@ -147,6 +146,7 @@ public:
         if (int(am1.size()) != Nw)
             std::cout << "Error: am1.size(" << am1.size() << ") != Nw.size(" << Nw << ") -> ComputeDerivatives.\n";
 
+        //#pragma omp parallel for
         for (int i=0; i<Nn; ++i)
         {
             for (int j=0; j<Nw; ++j)
@@ -174,7 +174,7 @@ public:
         for (int i=0; i<Nn; ++i)
             val += dCdb[i]/double(cntr);
 
-        bgraph << val/double(Nn) << std::endl;
+        //bgraph << val/double(Nn) << std::endl;
 
         cntr=0;
         memset(&dCdb[0],0,sizeof(double)*dCdb.size());
@@ -233,7 +233,12 @@ public:
         dCdw.clear();
         dCdb.clear();
 
-        bgraph.close();
+        //bgraph.close();
+    };
+
+    ~NeuralNetLayer()
+    {
+        Clear();
     };
 };
 

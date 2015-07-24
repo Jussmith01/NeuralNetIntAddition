@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <cstring>
+#include <sstream>
 
 #include "tools/random.hpp"
 #include "neuralnetlayer.hpp"
@@ -19,8 +20,8 @@ class NeuralNetwork
     double avgCost;
     long int cntr;
 
-    NeuralNetLayer nnl1; // Hidden layer 1
-    NeuralNetLayer nnl2; // Hidden layer 2
+    std::vector<NeuralNetLayer> nnl; // Neural network hidden layers
+
     NeuralNetLayer nno; // The output layer
 
     NeuralNetwork() {};
@@ -28,15 +29,19 @@ class NeuralNetwork
 public:
 
     //NeuralNetwork(std::vector<float> &ila,std::vector<float> &de,float eta)
-    NeuralNetwork(int iptN,int midN,int outN,float eta)
+    NeuralNetwork(int iptN,int midN,int outN,int Nlayers,float eta)
     {
         //this->ila=ila;
         //this->de=de;
         this->eta=eta;
 
-        nnl1.Init(iptN,midN,"Hidden1bgraph.dat");
-        nnl2.Init(midN,midN,"Hidden2bgraph.dat");
-        nno.Init(midN,outN,"Output1bgraph.dat");
+        nnl.resize(Nlayers);
+
+        nnl.front().Init(iptN,midN);
+        for (int i = 1; i < int(nnl.size());++i)
+            nnl[i].Init(midN,midN);
+
+        nno.Init(midN,outN);
 
         cntr=0;
         avgCost=0;
@@ -51,9 +56,12 @@ public:
 
     void ComputeLayers()
     {
-        nnl1.ComputeActivation(ila);
-        nnl2.ComputeActivation(nnl1.GetActivation());
-        nno.ComputeActivation(nnl2.GetActivation());// Getting Nanners????!!!!
+
+        nnl.front().ComputeActivation(ila);
+        for (int i = 1; i < int(nnl.size());++i)
+            nnl[i].ComputeActivation(nnl[i-1].GetActivation());
+
+        nno.ComputeActivation(nnl.back().GetActivation());// Getting Nanners????!!!!
 
         ola=nno.GetActivation();
 
@@ -65,13 +73,19 @@ public:
     {
         // Backpropagate
         nno.ComputeInitalError(de);
-        nnl2.ComputeError(nno);
-        nnl1.ComputeError(nnl2);
+
+        nnl.back().ComputeError(nno);
+
+        for (int i = nnl.size()-2; i >= 0;i--)
+            nnl[i].ComputeError(nnl[i+1]);
 
         // Calculate Derivatives
-        nnl1.ComputeDerivatives(ila);
-        nnl2.ComputeDerivatives(nnl1.GetActivation());
-        nno.ComputeDerivatives(nnl2.GetActivation());
+        nnl.front().ComputeDerivatives(ila);
+
+        for ( int i = 1; i < int(nnl.size()) ; ++i )
+            nnl[i].ComputeDerivatives(nnl[i-1].GetActivation());
+
+        nno.ComputeDerivatives(nnl.back().GetActivation());
     };
 
     double CalculateCost()
@@ -115,11 +129,11 @@ public:
             std::cout << "eta now: " << eta;
         }
 
-        std::cout << std::endl;
         prevcost=currentcost;
 
-        nnl1.EndTrainingSet(eta);
-        nnl2.EndTrainingSet(eta);
+        for (auto&& n : nnl)
+            n.EndTrainingSet(eta);
+
         nno.EndTrainingSet(eta);
 
         cntr=0;
@@ -130,8 +144,7 @@ public:
 
     void Clear()
     {
-        nnl1.Clear();
-        //nnl2.Clear();
+        nnl.clear();
         nno.Clear();
         ila.clear();
         ola.clear();

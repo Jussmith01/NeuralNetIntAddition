@@ -12,8 +12,9 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
+					<Add option="-O3" />
 					<Add option="-std=c++11" />
-					<Add option="-g" />
+					<Add option="-fopenmp" />
 				</Compiler>
 				<Linker>
 					<Add library="gomp" />
@@ -29,6 +30,8 @@
 		<Unit filename="src/neuralnet.h" />
 		<Unit filename="src/neuralnetlayer.hpp" />
 		<Unit filename="src/tools/binaryconversion.hpp" />
+		<Unit filename="src/tools/micro_timer.cpp" />
+		<Unit filename="src/tools/micro_timer.h" />
 		<Unit filename="src/tools/random.hpp" />
 		<Extensions>
 			<code_completion />

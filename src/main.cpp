@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 
+#include "tools/micro_timer.h"
 #include "tools/binaryconversion.hpp"
 #include "neuralnet.h"
 
@@ -39,18 +40,22 @@ int main(int argc, char *argv[])
     irandgen.FillVector(irand,-1000000,1000000);
     irandgen.Clear();
 
-    NeuralNetwork nn(32,hls,32,eta);
+    NeuralNetwork nn(32,hls,32,2,eta);
 
     int ep=0;
     double avgcost = 100.0;
 
+    microTimer mt;
+
     while (avgcost>con)
     {
+        mt.start_point();
         //std::cout << "\n |---------STARING EPOCH " << ep << "----------|\n";
         //std::cout << "\n Randomizing Training Data...\n";
         std::random_shuffle(irand.begin(),irand.end());
 
         for (auto&& i : irand)
+        //for (int i=0;i<(int)irand.size()/2;++i)
         {
             //Begin Neural Network Computation
             input = ProduceBinaryVector(i);
@@ -66,6 +71,10 @@ int main(int argc, char *argv[])
         avgcost = nn.CompleteTrainingSet();
 
         ++ep;
+
+        mt.end_point();
+        std::cout << mt.get_generic_print_string(" ") << std::endl;
+        mt.reset();
     }
 
     irand.clear();
