@@ -38,8 +38,8 @@ void cuNeuralnetbase::setupCudaDevice()
                                                       << devprops[i].maxThreadsDim[1] << ","
                                                       << devprops[i].maxThreadsDim[2] << "]\n";
         std::cout << "  Maximum Block per Grid: [" << devprops[i].maxGridSize[0] << ","
-                                                   << devprops[i].maxGridSize[1] << ","
-                                                   << devprops[i].maxGridSize[2] << "]\n";
+                                                  << devprops[i].maxGridSize[1] << ","
+                                                  << devprops[i].maxGridSize[2] << "]\n";
         std::cout << "  Registers per Block: " << devprops[i].regsPerBlock << "\n";
 
         std::cout << std::endl;
