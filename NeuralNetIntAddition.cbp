@@ -4,29 +4,41 @@
 	<Project>
 		<Option title="NeuralNetIntAddition" />
 		<Option pch_mode="2" />
-		<Option compiler="gcc" />
+		<Option compiler="nvidia_nvcc_cuda_compiler" />
 		<Build>
 			<Target title="Release">
 				<Option output="bin/Release/NeuralNetIntAddition" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Release/" />
+				<Option object_output=".obj/Release/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
-				<Compiler>
-					<Add option="-O3" />
-					<Add option="-std=c++11" />
-					<Add option="-fopenmp" />
-				</Compiler>
-				<Linker>
-					<Add option="-s" />
-					<Add library="gomp" />
-				</Linker>
+				<Option compiler="nvidia_nvcc_cuda_compiler" />
+			</Target>
+			<Target title="Debug">
+				<Option output="bin/Debug/NeuralNetIntAddition" prefix_auto="1" extension_auto="1" />
+				<Option object_output=".objs/Debug/" />
+				<Option type="1" />
+				<Option compiler="nvidia_nvcc_cuda_compiler" />
 			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-std=c++11" />
-			<Add option="-Wall" />
+			<Add option="-gencode arch=compute_30,code=sm_30 -m64" />
+			<Add directory="/usr/local/cudnn-6.5" />
 		</Compiler>
-		<Unit filename="src/main.cpp" />
+		<Linker>
+			<Add library="gomp" />
+			<Add library="cuda" />
+			<Add library="cudnn" />
+			<Add directory="/usr/local/cudnn-6.5" />
+		</Linker>
+		<Unit filename="src/cutools/neuralnetbase.cu">
+			<Option compile="1" />
+			<Option link="1" />
+		</Unit>
+		<Unit filename="src/cutools/neuralnetbase.cuh" />
+		<Unit filename="src/main.cu">
+			<Option compile="1" />
+			<Option link="1" />
+		</Unit>
 		<Unit filename="src/neuralnet.cpp" />
 		<Unit filename="src/neuralnet.h" />
 		<Unit filename="src/neuralnetlayer.hpp" />

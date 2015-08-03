@@ -1,11 +1,17 @@
 #include <iostream>
 #include <iomanip>
+#include <string>
+#include <sstream>
 #include <vector>
 #include <algorithm>
+
+#include <cuda.h>
+#include <cudnn.h>
 
 #include "tools/micro_timer.h"
 #include "tools/binaryconversion.hpp"
 #include "neuralnet.h"
+#include "cutools/neuralnetbase.cuh"
 
 int main(int argc, char *argv[])
 {
@@ -22,6 +28,8 @@ int main(int argc, char *argv[])
 
         exit(1);
     }
+
+    cuNeuralnetbase nnb;
 
     double eta = atof(argv[1]);
     int tss = atoi(argv[2]);
