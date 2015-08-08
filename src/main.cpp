@@ -1,24 +1,30 @@
 #include <iostream>
 #include <iomanip>
+#include <fstream>
+#include <limits>
 #include <vector>
+#include <string>
+#include <iomanip>
 #include <algorithm>
 
 #include "tools/micro_timer.h"
 #include "tools/binaryconversion.hpp"
 #include "neuralnet.h"
+#include "tools/csvreader.hpp"
 
 int main(int argc, char *argv[])
 {
-    if (argv[1]==NULL || argv[2]==NULL || argv[3]==NULL || argv[4]==NULL || argv[5]==NULL || argv[6]==NULL)
+    if (argv[1]==NULL || argv[2]==NULL || argv[3]==NULL || argv[4]==NULL || argv[5]==NULL || argv[6]==NULL || argv[7]==NULL)
     {
         std::cout << "Error: Missing arguments!" << std::endl;
-        std::cout << "Syntax: ./NeuralNetIntAddition [eta] [tss] [ess] [hls] [nns] [con]" << std::endl;
+        std::cout << "Syntax: ./NeuralNetIntAddition [eta] [tss] [ess] [hls] [nns] [con] [fn]" << std::endl;
         std::cout << "   eta: The learning rate" << std::endl;
         std::cout << "   tss: The Training Set Size" << std::endl;
         std::cout << "   ess: The tEsting Set Size" << std::endl;
         std::cout << "   hls: The hidden layer size" << std::endl;
         std::cout << "   nnd: The Neural Net Depth" << std::endl;
         std::cout << "   con : Convergence of average cost" << std::endl;
+        std::cout << "   fn : CSV data file name" << std::endl;
 
         exit(1);
     }
@@ -29,38 +35,51 @@ int main(int argc, char *argv[])
     int hls = atoi(argv[4]);
     int nnd = atoi(argv[5]);
     double con = atof(argv[6]);
+    std::string filename(argv[7]);
 
-    std::cout << "eta: " << eta << " tss: " << tss  << " ess: " << ess << " hls: " << hls << " nnd: " << nnd << " con: " << con << std::endl;
+    std::cout << "eta: " << eta << " tss: " << tss  << " ess: " << ess << " hls: " << hls << " nnd: " << nnd << " con: " << con << " filename: " << filename <<  std::endl;
 
+    // Working vectors
+    std::vector<double> input(3);
+    std::vector<double> desired(9);
+    std::vector<double> output(9);
 
-    std::vector<double> input;
-    std::vector<double> desired;
-    std::vector<double> output;
+    // Open File
+    std::fstream file(filename.c_str());
 
-    RandomInt irandgen; // Train with a set of 10000
+    // Build index
     std::vector<int> irand(tss);
-    irandgen.FillVector(irand,-1000000,1000000);
-    irandgen.Clear();
+    for (int i=0;i<tss;++i)
+    {
+        irand[i]=i;
+    }
 
-    NeuralNetwork nn(32,hls,32,nnd,eta);
+    // Float scalar
+    double scalari(7.0);
+    double scalarf(9.5);
+    double shiftf(0.5);
+
+    // Define network
+    NeuralNetwork nn(12,hls,9,nnd,eta);
 
     int ep=0;
     double avgcost = 100.0;
 
+    // Define timer
     microTimer mt;
 
-    while (avgcost>con)
+    while (avgcost > con || ep > 1500)
     {
         mt.start_point();
 
         std::random_shuffle(irand.begin(),irand.end());
 
         for (auto&& i : irand)
-        //for (int i=0;i<(int)irand.size()/2;++i)
         {
             //Begin Neural Network Computation
-            input = ProduceBinaryVector(i);
-            desired = ProduceBinaryVector(i+1);
+            std::string data(GotoLine(file,i));
+            csvreader(data,input,3,14,scalarf,shiftf);
+            csvreader(data,desired,15,23,scalarf,shiftf);
 
             nn.NewTrainingData(input,desired);
             nn.ComputeLayers();
@@ -86,25 +105,51 @@ int main(int argc, char *argv[])
     itestrandgen.FillVector(irandtest,-1000000,1000000);
     itestrandgen.Clear();
 
-    int correct = 0;
-    for (int i=0;i<ess;++i)
+    std::vector<double> iforce;
+
+    std::ofstream am1g("am1force.graph");
+    std::ofstream pm6g("pm6force.graph");
+    std::ofstream nncg("nncforce.graph");
+    std::ofstream am1pm6g("am1pm6force.graph");
+    std::ofstream pm6nncg("pm6nncforce.graph");
+
+    am1g.setf( std::ios::fixed, std::ios::floatfield );
+    pm6g.setf( std::ios::fixed, std::ios::floatfield );
+    nncg.setf( std::ios::fixed, std::ios::floatfield );
+    am1pm6g.setf( std::ios::fixed, std::ios::floatfield );
+    pm6nncg.setf( std::ios::fixed, std::ios::floatfield );
+
+    for (int i=29000;i<29999;++i)
     {
-        input = ProduceBinaryVector(irandtest[i]);
-        desired = ProduceBinaryVector(irandtest[i]+1);
+        //Begin Neural Network Computation
+        std::string data(GotoLine(file,i));
+        csvreader(data,input,3,14,scalarf,shiftf);
+        csvreader(data,iforce,6,14,scalarf,shiftf);
+        csvreader(data,desired,15,23,scalarf,shiftf);
 
         nn.NewTrainingData(input,desired);
         nn.ComputeLayers();
 
         nn.GetOutput(output);
-        int value = ProduceIntegerFromBinary(output);
 
-        if (value == irandtest[i]+1)
-            ++correct;
-        else
-            std::cout << " Miss! " << value << " != " << irandtest[i]+1 << std::endl;
+
+        for (int j=0;j<int(output.size());++j)
+        {
+            am1pm6g << std::setprecision(7) << iforce[j]  << "  " << desired[j] << std::endl;
+            pm6nncg << std::setprecision(7) << desired[j] << "  " << output[j] << std::endl;
+            am1g << std::setprecision(7) << iforce[j] << std::endl;
+            pm6g << std::setprecision(7) << desired[j] << std::endl;
+            nncg << std::setprecision(7) << output[j] << std::endl;
+        }
     }
 
-    std::cout << "Accuracy:" << correct/double(ess) << std::endl;
+    am1g.close();
+    pm6g.close();
+    nncg.close();
+    am1pm6g.close();
+    pm6nncg.close();
+
+    //std::cout << "Accuracy:" << correct/double(ess) << std::endl;
 
     /*std::cout << "Input:  ";
     for (auto&& op : input)

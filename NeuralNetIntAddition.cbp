@@ -31,6 +31,7 @@
 		<Unit filename="src/neuralnet.h" />
 		<Unit filename="src/neuralnetlayer.hpp" />
 		<Unit filename="src/tools/binaryconversion.hpp" />
+		<Unit filename="src/tools/csvreader.hpp" />
 		<Unit filename="src/tools/micro_timer.cpp" />
 		<Unit filename="src/tools/micro_timer.h" />
 		<Unit filename="src/tools/random.hpp" />
