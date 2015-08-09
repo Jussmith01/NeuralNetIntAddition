@@ -11,6 +11,9 @@
 #include "tools/micro_timer.h"
 #include "tools/binaryconversion.hpp"
 #include "neuralnet.h"
+
+#include "cutools/cudaerrorhandling.cuh"
+
 #include "cutools/neuralnetbase.cuh"
 
 int main(int argc, char *argv[])

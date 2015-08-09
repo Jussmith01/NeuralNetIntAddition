@@ -52,6 +52,8 @@
 			<Add library="cudnn" />
 			<Add directory="/usr/local/cudnn-6.5" />
 		</Linker>
+		<Unit filename="src/cutools/cudadevicestools.cuh" />
+		<Unit filename="src/cutools/cudaerrorhandling.cuh" />
 		<Unit filename="src/cutools/neuralnetbase.cu">
 			<Option compile="1" />
 			<Option link="1" />

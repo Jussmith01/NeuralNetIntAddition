@@ -1,4 +1,5 @@
 NeuralNetIntAddition/
 *.dat
+obj/
 *.depend
 *.layout
