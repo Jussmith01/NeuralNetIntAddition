@@ -1,4 +1,7 @@
 *.depend
 *.layout
-objs/
+obj/
+NeuralNetIntAddition/
 *.graph
+*.dat
+
