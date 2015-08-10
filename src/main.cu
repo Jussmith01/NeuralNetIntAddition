@@ -7,6 +7,7 @@
 
 #include <cuda.h>
 #include <cudnn.h>
+#include <cublas_v2.h>
 
 #include "tools/micro_timer.h"
 #include "tools/binaryconversion.hpp"
@@ -18,7 +19,7 @@
 
 int main(int argc, char *argv[])
 {
-    if (argv[1]==NULL || argv[2]==NULL || argv[3]==NULL || argv[4]==NULL || argv[5]==NULL || argv[6]==NULL)
+    /*if (argv[1]==NULL || argv[2]==NULL || argv[3]==NULL || argv[4]==NULL || argv[5]==NULL || argv[6]==NULL)
     {
         std::cout << "Error: Missing arguments!" << std::endl;
         std::cout << "Syntax: ./NeuralNetIntAddition [eta] [tss] [ess] [hls] [nns] [con]" << std::endl;
@@ -30,11 +31,13 @@ int main(int argc, char *argv[])
         std::cout << "   con : Convergence of average cost" << std::endl;
 
         exit(1);
-    }
+    }*/
 
-    cuNeuralnetbase nnb;
+    cuNeuralNetworkbase nnb;
 
-    double eta = atof(argv[1]);
+    nnb.ActivationTest();
+
+    /*double eta = atof(argv[1]);
     int tss = atoi(argv[2]);
     int ess = atoi(argv[3]);
     int hls = atoi(argv[4]);
@@ -115,7 +118,7 @@ int main(int argc, char *argv[])
             std::cout << " Miss! " << value << " != " << irandtest[i]+1 << std::endl;
     }
 
-    std::cout << "Accuracy:" << correct/double(ess) << std::endl;
+    std::cout << "Accuracy:" << correct/double(ess) << std::endl;*/
 
     /*std::cout << "Input:  ";
     for (auto&& op : input)
@@ -135,9 +138,9 @@ int main(int argc, char *argv[])
     std::cout << "Output: ";
     for (auto&& op : output)
         std::cout << std::setprecision(5) << " " << op;
-    std::cout << std::endl;*/
+    std::cout << std::endl;
 
-    nn.Clear();
+    nn.Clear();*/
 
     return 0;
 };

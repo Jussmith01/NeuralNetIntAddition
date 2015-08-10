@@ -30,3 +30,13 @@
         FatalError(_error.str());                                           \
     }                                                                       \
 };
+
+#define cublasErrorHandler(_errchk)                                          \
+{                                                                           \
+    if (_errchk != CUBLAS_STATUS_SUCCESS)                                    \
+    {                                                                       \
+        std::stringstream _error;                                           \
+        _error << "cuDNN Error -- Error Code: \"" << _errchk << "\"";\
+        FatalError(_error.str());                                           \
+    }                                                                       \
+};

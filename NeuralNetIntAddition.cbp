@@ -45,12 +45,10 @@
 		</Build>
 		<Compiler>
 			<Add option="-std=c++11" />
-			<Add directory="/usr/local/cudnn-6.5" />
 		</Compiler>
 		<Linker>
 			<Add library="gomp" />
 			<Add library="cudnn" />
-			<Add directory="/usr/local/cudnn-6.5" />
 		</Linker>
 		<Unit filename="src/cutools/cudadevicestools.cuh" />
 		<Unit filename="src/cutools/cudaerrorhandling.cuh" />
