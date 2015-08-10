@@ -24,5 +24,5 @@ void cuNeuralnetbase::setupCudaDevice()
 
     printDevProps(devprops);
 
-    cudaErrorHandler(cudaSetDevice(0));
+    cudaErrorHandler(cudaSetDevice(1));
 };

@@ -11,14 +11,14 @@
     exit(EXIT_FAILURE);                                                                       \
 };
 
-#define cudaErrorHandler(_errchk)                                           \
-{                                                                           \
-    if (_errchk != cudaSuccess)                                             \
-    {                                                                       \
-        std::stringstream _error;                                           \
-        _error << "CUDA Error: \"" << cudaGetErrorString(_errchk) << "\"";  \
-        FatalError(_error.str());                                           \
-    }                                                                       \
+#define cudaErrorHandler(_errchk)                                                             \
+{                                                                                             \
+    if (_errchk != cudaSuccess)                                                               \
+    {                                                                                         \
+        std::stringstream _error;                                                             \
+        _error << "CUDA Error " << _errchk << ": \"" << cudaGetErrorString(_errchk) << "\"";  \
+        FatalError(_error.str());                                                             \
+    }                                                                                         \
 };
 
 #define cudnnErrorHandler(_errchk)                                          \
