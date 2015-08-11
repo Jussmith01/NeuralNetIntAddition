@@ -45,7 +45,7 @@ void cuNeuralNetworkbase::destroyHandles()
     cudnnErrorHandler(cudnnDestroy(cudnnHandle));
 };
 
-void cuNeuralNetworkbase::fullyConnectedForward(const Layer_t& ip,
+/*void cuNeuralNetworkbase::fullyConnectedForward(const Layer_t& ip,
                            int& n, int& c, int& h, int& w,
                            value_type* srcData, value_type** dstData)
 {
@@ -71,7 +71,7 @@ void cuNeuralNetworkbase::fullyConnectedForward(const Layer_t& ip,
     h = 1;
     w = 1;
     c = dim_y;
-}
+}*/
 
 void cuNeuralNetworkbase::activationForward(int n, int c, int h, int w, float* srcData, float** dstData)
 {
