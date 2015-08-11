@@ -49,9 +49,11 @@
 		<Linker>
 			<Add library="gomp" />
 			<Add library="cudnn" />
+			<Add library="cublas" />
 		</Linker>
 		<Unit filename="src/cutools/cudadevicestools.cuh" />
 		<Unit filename="src/cutools/cudaerrorhandling.cuh" />
+		<Unit filename="src/cutools/cudnnlayer_t.cuh" />
 		<Unit filename="src/cutools/neuralnetbase.cu">
 			<Option compile="1" />
 			<Option link="1" />

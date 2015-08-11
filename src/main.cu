@@ -33,9 +33,9 @@ int main(int argc, char *argv[])
         exit(1);
     }*/
 
-    cuNeuralNetworkbase nnb;
+    cuNeuralNetworkbase nnb("Filename.file",NNB_CREATE);
 
-    nnb.ActivationTest();
+    //nnb.ActivationTest();
 
     /*double eta = atof(argv[1]);
     int tss = atoi(argv[2]);
