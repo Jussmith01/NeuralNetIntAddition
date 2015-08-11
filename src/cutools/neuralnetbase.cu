@@ -14,7 +14,7 @@
 
 #include "neuralnetbase.cuh"
 
-void cuNeuralNetworkbase::setupCudaDevice()
+void cuNeuralNetworkbase::m_setupCudaDevice()
 {
     cudaErrorHandler(cudaGetDeviceCount(&numdevice));
     devprops.resize(numdevice);
@@ -28,26 +28,36 @@ void cuNeuralNetworkbase::setupCudaDevice()
     cudaErrorHandler(cudaSetDevice(0));
 };
 
-void cuNeuralNetworkbase::createHandles()
+void cuNeuralNetworkbase::m_createHandles()
 {
-    std::cout << "Running cuDNN version: " << cudnnGetVersion() << "\n";
-    std::cout << "Creating cuDNN Handles!" << "\n\n";
+    std::cout << "Creating cuDNN Handles!" << "\n";
     cudnnErrorHandler(cudnnCreate(&cudnnHandle));
     cudnnErrorHandler(cudnnCreateTensorDescriptor(&srcTensorDesc));
     cudnnErrorHandler(cudnnCreateTensorDescriptor(&dstTensorDesc));
+    std::cout << " Running cuDNN version: " << cudnnGetVersion() << "\n\n";
+
+    std::cout << "Creating cuBLAS Handles!" << "\n";
+    cublasErrorHandler( cublasCreate(&cublasHandle) );
+    int version;
+    cublasGetVersion(cublasHandle,&version);
+    std::cout << " Running cuBLAS version: " << version << "\n\n";
 };
 
-void cuNeuralNetworkbase::destroyHandles()
+void cuNeuralNetworkbase::m_destroyHandles()
 {
-    std::cout << "Destroying cuDNN Handles!" << "\n\n";
+    std::cout << "\nDestroying cuDNN Handles!" << "\n";
     cudnnErrorHandler(cudnnDestroyTensorDescriptor(dstTensorDesc));
     cudnnErrorHandler(cudnnDestroyTensorDescriptor(srcTensorDesc));
     cudnnErrorHandler(cudnnDestroy(cudnnHandle));
+
+    std::cout << "Destroying cuBLAS Handles!" << "\n";
+    cublasErrorHandler( cublasDestroy(cublasHandle) );
 };
 
-void cuNeuralNetworkbase::fullyConnectedForward(const Layer_t& ip,
+/*void cuNeuralNetworkbase::fullyConnectedForward(
                            int& n, int& c, int& h, int& w,
-                           value_type* srcData, value_type** dstData)
+                           float* srcData, float** dstData,
+                           float* weight_d,float* bias_d)
 {
     if (n != 1) {
         FatalError("Not Implemented");
@@ -56,14 +66,17 @@ void cuNeuralNetworkbase::fullyConnectedForward(const Layer_t& ip,
     int dim_y = ip.outputs;
     resize(dim_y, dstData);
 
-    value_type alpha = value_type(1), beta = value_type(1);
+    float alpha = float(1), beta = float(1);
+
+
+
     // place bias into dstData
-    checkCudaErrors( cudaMemcpy(*dstData, ip.bias_d, dim_y*sizeof(value_type), cudaMemcpyDeviceToDevice) );
+    checkCudaErrors( cudaMemcpy(*dstData, bias_d, dim_y*sizeof(float), cudaMemcpyDeviceToDevice) );
 
     checkCudaErrors( cublasSgemv(cublasHandle, CUBLAS_OP_T,
                                  dim_x, dim_y,
                                  &alpha,
-                                 ip.data_d, dim_x,
+                                 weight_d, dim_x,
                                  srcData, 1,
                                  &beta,
                                  *dstData, 1) );
@@ -71,9 +84,9 @@ void cuNeuralNetworkbase::fullyConnectedForward(const Layer_t& ip,
     h = 1;
     w = 1;
     c = dim_y;
-}
+}*/
 
-void cuNeuralNetworkbase::activationForward(int n, int c, int h, int w, float* srcData, float** dstData)
+/*void cuNeuralNetworkbase::activationForward(int n, int c, int h, int w, float* srcData, float** dstData)
 {
     cudnnErrorHandler( cudnnSetTensor4dDescriptor(srcTensorDesc,
                        CUDNN_TENSOR_NCHW,
@@ -97,4 +110,4 @@ void cuNeuralNetworkbase::activationForward(int n, int c, int h, int w, float* s
                        &beta,
                        dstTensorDesc,
                        *dstData) );
-};
+};*/
