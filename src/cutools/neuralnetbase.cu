@@ -10,11 +10,11 @@
 #include <cublas_v2.h>
 
 #include "cudaerrorhandling.cuh"
-#include "cudadevicestools.cuh"
+#include "cudahosttools.cuh"
 
 #include "neuralnetbase.cuh"
 
-void cuNeuralNetworkbase::m_setupCudaDevice()
+void fpn::cuNeuralNetworkbase::m_setupCudaDevice()
 {
     cudaErrorHandler(cudaGetDeviceCount(&numdevice));
     devprops.resize(numdevice);
@@ -28,7 +28,7 @@ void cuNeuralNetworkbase::m_setupCudaDevice()
     cudaErrorHandler(cudaSetDevice(0));
 };
 
-void cuNeuralNetworkbase::m_createHandles()
+void fpn::cuNeuralNetworkbase::m_createHandles()
 {
     std::cout << "Creating cuDNN Handles!" << "\n";
     cudnnErrorHandler(cudnnCreate(&cudnnHandle));
@@ -43,7 +43,7 @@ void cuNeuralNetworkbase::m_createHandles()
     std::cout << " Running cuBLAS version: " << version << "\n\n";
 };
 
-void cuNeuralNetworkbase::m_destroyHandles()
+void fpn::cuNeuralNetworkbase::m_destroyHandles()
 {
     std::cout << "\nDestroying cuDNN Handles!" << "\n";
     cudnnErrorHandler(cudnnDestroyTensorDescriptor(dstTensorDesc));

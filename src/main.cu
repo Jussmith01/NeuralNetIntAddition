@@ -32,6 +32,7 @@ int main(int argc, char *argv[])
 
         exit(1);
     }*/
+    using namespace fpn;
 
     cuNeuralNetworkbase nnb("Filename.file",NNB_CREATE);
 

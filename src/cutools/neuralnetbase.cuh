@@ -1,6 +1,9 @@
 #ifndef NNBASE_CU
 #define NNBASE_CU
 
+namespace fpn // Force Prediction Network
+{
+
 enum  Initializers {
     NNB_CREATE,
     NNB_LOAD
@@ -27,7 +30,7 @@ class cuNeuralNetworkbase {
     // cuBLAS Handle
     cublasHandle_t cublasHandle;
 
-    /*---------------Class functions--------------------*/
+    /*-------------Class Private functions----------------*/
     /*  Fuction for creating needed cuda handlers   */
     void m_createHandles(void);
 
@@ -93,6 +96,8 @@ public:
         m_destroyHandles();
     };
 
+    /*-------------Class Public functions----------------*/
+
     /*     Activation Test      */
     /*void ActivationTest ()
     {
@@ -152,4 +157,5 @@ public:
     };*/
 };
 
+};
 #endif

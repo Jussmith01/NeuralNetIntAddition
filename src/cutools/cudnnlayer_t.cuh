@@ -1,6 +1,9 @@
 #ifndef CUDNNLAYER_T_CU
 #define CUDNNLAYER_T_CU
 
+namespace fpn
+{
+
 //________________________________________________________________________//
 //      *************************************************************     //
 //                        NeuralNet Base Class
@@ -10,6 +13,8 @@ class cudnnLayer_t {
 
 
 public:
+
+};
 
 };
 
