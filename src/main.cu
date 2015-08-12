@@ -1,20 +1,23 @@
+/* Std. Lib. Includes */
 #include <iostream>
 #include <iomanip>
 #include <string>
 #include <sstream>
 #include <vector>
 #include <algorithm>
+#include <regex>
 
+/* CUDA Includes */
 #include <cuda.h>
 #include <cudnn.h>
 #include <cublas_v2.h>
 
+/* Tools */
 #include "tools/micro_timer.h"
-#include "tools/binaryconversion.hpp"
-#include "neuralnet.h"
+//#include "tools/binaryconversion.hpp"
 
+/* Cuda Tools */
 #include "cutools/cudaerrorhandling.cuh"
-
 #include "cutools/neuralnetbase.cuh"
 
 int main(int argc, char *argv[])
@@ -34,8 +37,17 @@ int main(int argc, char *argv[])
     }*/
     using namespace fpn;
 
-    cuNeuralNetworkbase nnb("Filename.file",NNB_CREATE);
+    std::cout << "GNU: " << __GNUC__ << "." << __GNUC_MINOR__ << std::endl;
 
+    try {
+
+    cuNeuralNetworkbase nnb("2:3:2",NNB_CREATE);
+
+    } catch (std::string _caught) {
+
+    cudaFatalError(_caught);
+
+    }
     //nnb.ActivationTest();
 
     /*double eta = atof(argv[1]);

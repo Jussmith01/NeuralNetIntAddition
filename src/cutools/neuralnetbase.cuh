@@ -1,8 +1,9 @@
 #ifndef NNBASE_CU
 #define NNBASE_CU
 
-namespace fpn // Force Prediction Network
-{
+#include "cudnnlayer_t.cuh"
+
+namespace fpn { // Force Prediction Network
 
 enum  Initializers {
     NNB_CREATE,
@@ -20,15 +21,17 @@ class cuNeuralNetworkbase {
     int numdevice; // Number of devices detected on the system
     std::vector<cudaDeviceProp> devprops; // Holds each devices properties
 
-    // Get system device information and setup devices
-    void m_setupCudaDevice(void);
-
     // cuDNN Handles
     cudnnHandle_t cudnnHandle;
     cudnnTensorDescriptor_t srcTensorDesc, dstTensorDesc;
 
     // cuBLAS Handle
     cublasHandle_t cublasHandle;
+
+    // Network Layers
+    int inlayersize;
+    long long int wbdataSize; // Weights and Bias total data size
+    std::vector<ReLUlayer_t> layers;
 
     /*-------------Class Private functions----------------*/
     /*  Fuction for creating needed cuda handlers   */
@@ -37,24 +40,30 @@ class cuNeuralNetworkbase {
     /*  Fuction for destroying needed cuda handlers   */
     void m_destroyHandles(void);
 
+    /* Get system device information and setup devices */
+    void m_setupCudaDevice(void);
+
     /*  Network Creator (Currently randomly initializes a networks weights and biases) */
-    void m_createNetwork(std::string file);
+    void m_createNetwork(const std::string file);
 
     /*  Network Save */
-    void m_saveNetwork(std::string file);
+    void m_saveNetwork(const std::string file);
 
     /*  Network Load */
-    void m_loadNetwork(std::string file);
+    void m_loadNetwork(const std::string file);
 
     /*  Builds the individual layers from input weights and biases */
     void m_buildLayers(std::vector<float> data_wh,std::vector<float> data_bh);
 
+    /* Reads a network template fule */
+    std::vector<unsigned int> m_parseNetworkTemplate(const std::string templateString);
+
     //void activationForward(int n, int c, int h, int w, float* srcData, float** dstData);
     //void fullyConnectedForward(int& n, int& c, int& h, int& w,float* srcData, float** dstData);
 
-    /*     Base Constructor     */
-    cuNeuralNetworkbase ()
-    {
+
+    /*-------Primary Constructor--------*/
+    cuNeuralNetworkbase () {
         // Get cuda device information and setup device
         m_setupCudaDevice();
 
@@ -64,31 +73,42 @@ class cuNeuralNetworkbase {
 
 public:
 
-    /*     Load Constructor     */
-    cuNeuralNetworkbase(std::string networkfile,enum Initializers setup) :
-        cuNeuralNetworkbase()
-    {
-        switch (setup)
-        {
-            /* This case creates a new network from a network template file and sets it up */
+    /*   Network Creation/Load Constructor     */
+    cuNeuralNetworkbase(const std::string networknfo,enum Initializers setup) : cuNeuralNetworkbase() {
+        switch (setup) {
+            /* This case creates a new network from a network template string stored in
+            network nfo and sets it up */
             case NNB_CREATE: {
-                std::cout << "Creating a Neural Network from template file: " << networkfile << std::endl;
-                //m_createNetwork(networkfile);
+                m_createNetwork(networknfo);
                 break;
-            }
+            };
 
-            /* This case creates loads a network from a saved network file and sets it up */
+            /* This case loads a network from a saved network file and sets it up */
             case NNB_LOAD: {
-                std::cout << "Loading the Neural Network from file: " << networkfile << std::endl;
+                std::regex pattern_nnffile(".*\\.nnf$"); // Ensure only .nnf (Neural Network Format) files are given
+                if (!std::regex_search(networknfo,pattern_nnffile))
+                    {fpnThrowHandler(std::string("Only .nnf files can be used to construct the cuNeuralNetworkbase class"));}
+
+                std::cout << "Loading the Neural Network data from file: " << networknfo << std::endl;
                 //m_loadNetwork(networkfile);
+
                 break;
-            }
+            };
         }
     }
 
     /*     Destructor      */
-    ~cuNeuralNetworkbase ()
-    {
+    ~cuNeuralNetworkbase () {
+        std::cout << "\nCleaning up the Neural Network Base class!" << std::endl;
+
+        // Clear Layers
+        while (!layers.empty())
+        {
+            layers.back().clearDevice();
+            layers.pop_back();
+        }
+
+
         // Clear device properties
         devprops.clear();
 
