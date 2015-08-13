@@ -18,6 +18,17 @@
 // Declare Layer ID Counter
 int fpn::ReLUlayer_t::IDindex = 0;
 
+/*--------Resize a CUDA Container-------
+
+
+--------------------------------------*/
+void fpn::ReLUlayer_t::m_resize(int size, float **data) {
+    if (*data != NULL) {
+        cudaThrowHandler( cudaFree(*data) );
+    }
+    cudaThrowHandler( cudaMalloc(data, size*sizeof(float)) );
+}
+
 /*-----Load Layer Data to Device------
 
 
@@ -33,15 +44,13 @@ void fpn::ReLUlayer_t::m_loadDataToDevice() {
     cudnnThrowHandler(cudnnCreateTensorDescriptor(&dstTensorDesc));
 
     /* Allocate Weights and Bias on Device */
-    if (!dataLoad)
-    {
+    if (!dataLoad) {
         cudaThrowHandler(cudaMalloc((void**)&weight_d,nw*sizeof(float)));
         cudaThrowHandler(cudaMalloc((void**)&bias_d  ,nb*sizeof(float)));
     }
 
     /* Allocate Cost Derivatives on Device */
-    if (trainer)
-    {
+    if (trainer) {
         cudaThrowHandler(cudaMalloc((void**)&dCdw_d,nw*sizeof(float)));
         cudaThrowHandler(cudaMalloc((void**)&dCdb_d,nb*sizeof(float)));
         cudaThrowHandler(cudaMalloc((void**)&Z_d,nb*sizeof(float)));
@@ -60,28 +69,26 @@ void fpn::ReLUlayer_t::m_loadDataToDevice() {
 
 --------------------------------------*/
 void fpn::ReLUlayer_t::m_clearDataOnDevice() {
-     weight_h.clear();
-     bias_h.clear  ();
+    weight_h.clear();
+    bias_h.clear  ();
 
-     cudaThrowHandler(cudaDeviceSynchronize());
+    cudaThrowHandler(cudaDeviceSynchronize());
 
-     cudnnThrowHandler(cudnnDestroyTensorDescriptor(dstTensorDesc));
-     cudnnThrowHandler(cudnnDestroyTensorDescriptor(srcTensorDesc));
+    cudnnThrowHandler(cudnnDestroyTensorDescriptor(dstTensorDesc));
+    cudnnThrowHandler(cudnnDestroyTensorDescriptor(srcTensorDesc));
 
-     if (dataLoad)
-     {
+    if (dataLoad) {
         cudaThrowHandler(cudaFree(weight_d));
         cudaThrowHandler(cudaFree(bias_d  ));
-     }
+    }
 
-    if (trainer)
-    {
+    if (trainer) {
         cudaThrowHandler(cudaFree(dCdw_d));
         cudaThrowHandler(cudaFree(dCdb_d));
         cudaThrowHandler(cudaFree(Z_d));
     }
 
-     dataLoad=false;
+    dataLoad=false;
 };
 
 /*-----Retrieve Data from Device------
@@ -92,8 +99,7 @@ void fpn::ReLUlayer_t::m_retriveDataFromDevice() {
     int nw = weight_h.size();
     int nb =   bias_h.size();
 
-    if (dataLoad)
-    {
+    if (dataLoad) {
         cudaThrowHandler(cudaMemcpy(&weight_h[0],weight_d,nw*sizeof(float),cudaMemcpyDeviceToHost));
         cudaThrowHandler(cudaMemcpy(&bias_h[0]  ,bias_d  ,nb*sizeof(float),cudaMemcpyDeviceToHost));
     }
@@ -106,33 +112,37 @@ calculate the z values, which are used
 to calculate the activations.
 
 --------------------------------------*/
-void fpn::ReLUlayer_t::fullyConnectedForward(float* srcData, float** dstData) {
+void fpn::ReLUlayer_t::fullyConnectedForward(int c,float* srcData, float** dstData) {
     if (n != 1) {
         fpnThrowHandler(std::string("Not Implemented"));
     }
 
-    int dim_x = c*h*w;
-    int dim_y = n;
-    //resize(dim_y, dstData);
+    // c = data points
+    // w = weights
+    // b = biases
+    // n = feature maps - NOT USED! Always 1;
+
+    int dim_x = w*b;
+    int dim_y = b;
+    m_resize(dim_y, dstData);
 
     float alpha = float(1), beta = float(1);
 
 
+    int ils = w/b; // Input layer size
 
     // place bias into dstData
-    cudaThrowHandler( cudaMemcpy(*dstData, bias_d, dim_y*sizeof(float), cudaMemcpyDeviceToDevice) );
+    for (int i=0; i<c; ++i) {
+        cudaThrowHandler( cudaMemcpy(dstData[c*b], bias_d, dim_y*sizeof(float), cudaMemcpyDeviceToDevice) );
 
-    cublasThrowHandler( cublasSgemv(*cublasHandle, CUBLAS_OP_T,
-                                 dim_x, dim_y,
-                                 &alpha,
-                                 weight_d, dim_x,
-                                 srcData, 1,
-                                 &beta,
-                                 *dstData, 1) );
-
-    h = 1;
-    w = 1;
-    c = dim_y;
+        cublasThrowHandler( cublasSgemv(*cublasHandle, CUBLAS_OP_T,
+                                        dim_x, dim_y,
+                                        &alpha,
+                                        weight_d, dim_x,
+                                        &srcData[c*ils], 1,
+                                        &beta,
+                                        dstData[c*b], 1) );
+    }
 }
 
 /*void cuNeuralNetworkbase::activationForward(int n, int c, int h, int w, float* srcData, float** dstData) {

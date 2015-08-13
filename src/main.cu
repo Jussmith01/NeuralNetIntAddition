@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
     try {
 
     //cuNeuralNetworkTrainer nnt("networkData.nnf",FPN_LOAD_AND_TRAIN);
-    csvdataStructure dataStruct("trainingData.dat",3,8,9,13);
+    csvdataStructure dataStruct("trainingData.dat",3,8,9,13,3);
     cuNeuralNetworkTrainer nnt(dataStruct,std::string(argv[1]),FPN_CREATE_AND_TRAIN);
     nnt.trainNetwork();
     nnt.testNetwork();

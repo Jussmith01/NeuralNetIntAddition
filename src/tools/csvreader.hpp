@@ -46,8 +46,8 @@ inline void pcsvreader(std::string &line,std::vector<T> &data,int colstart,int c
 
     //std::cout << tmpline << std::endl;
 
-    data.clear();
-    data.reserve(colend-colstart);
+    //data.clear();
+    //data.reserve(colend-colstart);
 
     int colpos = 0;
     while (tmpline.find_first_of(",")!=std::string::npos) {
@@ -56,7 +56,7 @@ inline void pcsvreader(std::string &line,std::vector<T> &data,int colstart,int c
 
         if (colpos >= colstart && colpos <= colend)
         {
-            data.push_back(atof(tmpline.substr(0,tpos-1).c_str())/(2.0*scale)+shift);
+            data.push_back(atof(tmpline.substr(0,tpos-1).c_str())/(scale)+shift);
             /*if (data.back()>1.0 || data.back() < 0.0)
             {
                 std::cout << "(" << colpos << "," << tpos << ") = " << tmpline.substr(0,tpos-1) << std::endl;

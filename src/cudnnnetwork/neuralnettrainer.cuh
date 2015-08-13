@@ -12,9 +12,12 @@ struct csvdataStructure {
     std::string fname;
     unsigned int idBeg,idEnd;
     unsigned int edBeg,edEnd;
+    unsigned int tss; //training set size
 
-    csvdataStructure(std::string fname,unsigned int idBeg,unsigned int idEnd,unsigned int edBeg,unsigned int edEnd) :
-        fname(fname),idBeg(idBeg),idEnd(idEnd),edBeg(edBeg),edEnd(edEnd)
+    csvdataStructure(std::string fname,unsigned int idBeg,unsigned int idEnd,
+                                       unsigned int edBeg,unsigned int edEnd,
+                                       unsigned int tss) :
+        fname(fname),idBeg(idBeg),idEnd(idEnd),edBeg(edBeg),edEnd(edEnd),tss(tss)
     {};
 };
 
@@ -24,6 +27,8 @@ struct csvdataStructure {
 //                 Carries out training of the base network
 //      *************************************************************     //
 class cuNeuralNetworkTrainer : public cuNeuralNetworkbase {
+    /* Input Data */
+    csvdataStructure inparams;
 
     /* Host Data Storage */
     std::vector<float> inputData;
@@ -31,25 +36,26 @@ class cuNeuralNetworkTrainer : public cuNeuralNetworkbase {
 
     /* Device Data Pointers */
     float* srcData_d;
-    float* dstData_d;
+    float* cmpData_d;
 
     /* Private Functions */
-    void m_loadTrainingData(csvdataStructure &dfname);
+    void m_loadTrainingData();
     void m_setDataOnDevice();
     void m_clearDataFromDevice();
 
 public:
 
     cuNeuralNetworkTrainer(csvdataStructure datastruct,std::string init,Initializers type) :
-            cuNeuralNetworkbase(init,type)
+            cuNeuralNetworkbase(init,type),inparams(datastruct)
     {
-        std::cout << "Buidling Training Class and Loading Training Data!\n";
-        m_loadTrainingData(datastruct);
+        std::cout << "Building Training Class and Loading Training Data!\n";
+        m_loadTrainingData();
         m_setDataOnDevice();
     }
 
     void trainNetwork() {
         std::cout << " Training Network\n";
+        feedForward(inputData.size(),srcData_d,expectData.size(),cmpData_d,inparams.tss);
     };
 
     void testNetwork() {
