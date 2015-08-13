@@ -3,3 +3,8 @@ NeuralNetIntAddition/
 obj/
 *.depend
 *.layout
+*.cmake
+.obj/
+CMakeFiles/
+CMakeCache.txt
+Makefile
