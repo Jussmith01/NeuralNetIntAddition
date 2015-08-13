@@ -6,6 +6,7 @@
 #include <vector>
 #include <algorithm>
 #include <regex>
+#include <signal.h>
 
 /* CUDA Includes */
 #include <cuda.h>
@@ -19,6 +20,11 @@
 /* Cuda Tools */
 #include "cutools/cudaerrorhandling.cuh"
 #include "cutools/neuralnetbase.cuh"
+
+inline void sigsegvHandler (int param)
+{
+    sigsegvErrorHandler(std::string("A Segmentation violation has been detected. Shutting down the program nicely."));
+}
 
 int main(int argc, char *argv[])
 {
@@ -35,19 +41,30 @@ int main(int argc, char *argv[])
 
         exit(1);
     }*/
+
+    // Setup special signaling
+    signal(SIGSEGV,sigsegvHandler);
+
+    //raise(SIGINT);
+
     using namespace fpn;
 
-    std::cout << "GNU: " << __GNUC__ << "." << __GNUC_MINOR__ << std::endl;
+    std::cout << "GNU Version: " << __GNUC__ << "." << __GNUC_MINOR__ << std::endl;
 
     try {
 
-    cuNeuralNetworkbase nnb("2:3:2",NNB_CREATE);
+    int * gay;
+    gay[0]=1;
+
+    cuNeuralNetworkbase nnb("32:8192:8192:8192:8192:8192:8192:8192:8192:4096:32",NNB_CREATE);
 
     } catch (std::string _caught) {
 
     cudaFatalError(_caught);
 
     }
+
+    signal(SIGSEGV,SIG_DFL);
     //nnb.ActivationTest();
 
     /*double eta = atof(argv[1]);

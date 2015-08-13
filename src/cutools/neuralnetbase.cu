@@ -33,7 +33,7 @@ void fpn::cuNeuralNetworkbase::m_setupCudaDevice() {
 
     printDevProps(devprops);
 
-    cudaThrowHandler(cudaSetDevice(0));
+    cudaThrowHandler(cudaSetDevice(1));
 };
 
 /*-------Setup CUDA Libraries---------
@@ -88,7 +88,7 @@ void fpn::cuNeuralNetworkbase::m_createNetwork(const std::string templateString)
 
     inlayersize = netarch.front();
     std::cout << " Neural net architecture requested: \n  Input layer size=" << netarch.front() << " followed by layers of size ";
-    int Nw = 0; int Nb = 0;
+    unsigned int Nw = 0; int Nb = 0;
     std::vector<unsigned int>::iterator it;
     for (it=netarch.begin()+1;it!=netarch.end();++it)
     {

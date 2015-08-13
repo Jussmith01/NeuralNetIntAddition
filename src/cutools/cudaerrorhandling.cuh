@@ -43,8 +43,8 @@
     {                                                                                           \
         std::cerr <<  "ERROR: cuDNN throw detected!" << std::endl;                              \
         std::stringstream _error;                                                               \
-        _error << "cuDNN Error -- \"" << cudnnGetErrorString(_errchk) << "\"";                  \
-        _error << _errchk << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;    \
+        _error << "cuDNN Error -- \"" << cudnnGetErrorString(_errchk) << "\"\n";                  \
+        _error << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;    \
         _error << " in function -- " << __FUNCTION__ << "()" <<  std::endl;                     \
         throw _error.str();                                                                     \
     }                                                                                           \
@@ -57,7 +57,7 @@
         std::cerr <<  "ERROR: cuBLAS throw detected!" << std::endl;                             \
         std::stringstream _error;                                                               \
         _error << "cuDNN Error -- Error Code: \"" << _errchk << "\"";                           \
-        _error << _errchk << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;    \
+        _error << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;    \
         _error << " in function -- " << __FUNCTION__ << "()" <<  std::endl;                     \
         throw _error.str();                                                                     \
     }                                                                                           \
@@ -72,6 +72,20 @@
         _error << "\nFPN Error -- \"" << _errchk << "\" \n";                                    \
         _error << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;               \
         _error << " in function -- " << __FUNCTION__ << "()" << std::endl;                      \
+        throw _error.str();                                                                     \
+    }                                                                                           \
+};
+
+#define sigsegvErrorHandler(_errchk)                                                            \
+{                                                                                               \
+    if (!_errchk.empty())                                                                       \
+    {                                                                                           \
+        std::cerr <<  "ERROR: Segmentation Violation Detected!" << std::endl;                   \
+        std::stringstream _error;                                                               \
+        _error << "\nError -- \"" << _errchk << "\" \n";                                        \
+        _error << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;               \
+        _error << " in function -- " << __FUNCTION__ << "()" << std::endl;                      \
+        std::cerr << _error.str();                                                                    \
         throw _error.str();                                                                     \
     }                                                                                           \
 };

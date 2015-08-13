@@ -2,6 +2,7 @@
 #define CURAND_HOST_TOOLS_CU
 
 #include <ctime>
+#include <climits>
 #include <curand.h>
 
 #define curandThrowHandler(_errchk)                                                             \
@@ -10,8 +11,8 @@
     {                                                                                           \
         std::cerr <<  "ERROR: cuRAND throw detected!" << std::endl;                             \
         std::stringstream _error;                                                               \
-        _error << "cuDNN Error -- Error Code: \"" << _errchk << "\"";                           \
-        _error << _errchk << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;    \
+        _error << "cuRAND Error -- Error Code: \"" << _errchk << "\"\n";                        \
+        _error << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;    \
         _error << " in function -- " << __FUNCTION__ << "()" <<  std::endl;                     \
         throw _error.str();                                                                     \
     }                                                                                           \
@@ -20,10 +21,23 @@
 namespace fpn
 {
 
-void curandGenRandomFloats (std::vector<float> &hostData,const unsigned int n)
-{
+/*-----Generate Random Uniform Floats-------
+
+Uses cuRAND Host API to generate the random
+floats to initialize the network.
+
+--------------------------------------------*/
+void curandGenRandomFloats (std::vector<float> &hostData,const unsigned int n) {
     curandGenerator_t generator;
     float *devData;
+
+    if (n >= UINT_MAX)
+    {
+        std::stringstream _error;
+        _error << "\nDon't you think " << UINT_MAX << " is a lot of random numbers? I do too.\n";
+        std::cout << _error.str() << std::endl;
+        fpnThrowHandler(std::string("Network size is too large!"));
+    }
 
     /* Allocate Host */
     hostData.resize(n);
