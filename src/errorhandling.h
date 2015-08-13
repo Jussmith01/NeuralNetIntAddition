@@ -19,7 +19,7 @@
 #define cudaFatalError(_errstr)                                                               \
 {                                                                                             \
     std::cerr <<  _errstr << std::endl;                                                       \
-    std::cerr << " Resetting CUDA Device and returning! " << std::endl;                         \
+    std::cerr << " Resetting CUDA Device and returning! " << std::endl;                       \
     cudaDeviceReset();                                                                        \
     return(EXIT_FAILURE);                                                                     \
 };
@@ -30,7 +30,7 @@
     {                                                                                           \
         std::cerr <<  "ERROR: CUDA throw detected!" << std::endl;                               \
         std::stringstream _error;                                                               \
-        _error << "CUDA Error -- \"" << cudaGetErrorString(_errchk) << "\"\n";                    \
+        _error << "CUDA Error -- \"" << cudaGetErrorString(_errchk) << "\"\n";                  \
         _error << _errchk << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;    \
         _error << " in function -- " << __FUNCTION__ << "()" <<  std::endl;                     \
         throw _error.str();                                                                     \
@@ -43,8 +43,8 @@
     {                                                                                           \
         std::cerr <<  "ERROR: cuDNN throw detected!" << std::endl;                              \
         std::stringstream _error;                                                               \
-        _error << "cuDNN Error -- \"" << cudnnGetErrorString(_errchk) << "\"\n";                  \
-        _error << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;    \
+        _error << "cuDNN Error -- \"" << cudnnGetErrorString(_errchk) << "\"\n";                \
+        _error << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;               \
         _error << " in function -- " << __FUNCTION__ << "()" <<  std::endl;                     \
         throw _error.str();                                                                     \
     }                                                                                           \
@@ -57,7 +57,7 @@
         std::cerr <<  "ERROR: cuBLAS throw detected!" << std::endl;                             \
         std::stringstream _error;                                                               \
         _error << "cuDNN Error -- Error Code: \"" << _errchk << "\"";                           \
-        _error << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;    \
+        _error << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;               \
         _error << " in function -- " << __FUNCTION__ << "()" <<  std::endl;                     \
         throw _error.str();                                                                     \
     }                                                                                           \

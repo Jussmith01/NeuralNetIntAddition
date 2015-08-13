@@ -20,8 +20,9 @@
 #include "tools/micro_timer.h"
 //#include "tools/binaryconversion.hpp"
 
-/* Cuda Tools */
+/* Cuda Neural Network Tools */
 #include "cudnnnetwork/neuralnetbase.cuh"
+#include "cudnnnetwork/neuralnettrainer.cuh"
 
 inline void sigsegvHandler (int param) {
     signalHandler(std::string("A Segmentation violation has been detected. Attempting to cleanup..."));
@@ -32,19 +33,11 @@ inline void terminationHandler (int param) {
 }
 
 int main(int argc, char *argv[]) {
-    /*if (argv[1]==NULL || argv[2]==NULL || argv[3]==NULL || argv[4]==NULL || argv[5]==NULL || argv[6]==NULL)
+    if (argv[1]==NULL)
     {
         std::cout << "Error: Missing arguments!" << std::endl;
-        std::cout << "Syntax: ./NeuralNetIntAddition [eta] [tss] [ess] [hls] [nns] [con]" << std::endl;
-        std::cout << "   eta: The learning rate" << std::endl;
-        std::cout << "   tss: The Training Set Size" << std::endl;
-        std::cout << "   ess: The tEsting Set Size" << std::endl;
-        std::cout << "   hls: The hidden layer size" << std::endl;
-        std::cout << "   nnd: The Neural Net Depth" << std::endl;
-        std::cout << "   con : Convergence of average cost" << std::endl;
-
         exit(1);
-    }*/
+    }
 
     /* Setup special signaling */
     signal(SIGSEGV,sigsegvHandler);
@@ -57,7 +50,13 @@ int main(int argc, char *argv[]) {
 
     try {
 
-    cuNeuralNetworkbase nnb("2:3:2",NNB_CREATE);
+    //cuNeuralNetworkTrainer nnt("networkData.nnf",FPN_LOAD_AND_TRAIN);
+    csvdataStructure dataStruct("trainingData.dat",3,8,9,13);
+    cuNeuralNetworkTrainer nnt(dataStruct,std::string(argv[1]),FPN_CREATE_AND_TRAIN);
+    nnt.trainNetwork();
+    nnt.testNetwork();
+    nnt.saveNetwork();
+    nnt.clearNetwork();
 
     } catch (std::string _caught) {
 

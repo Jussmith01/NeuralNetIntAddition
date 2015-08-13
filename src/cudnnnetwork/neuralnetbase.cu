@@ -14,6 +14,7 @@
 #include <cublas_v2.h>
 
 #include "../errorhandling.h"
+#include "../tools/csvreader.hpp"
 
 #include "../cutools/cudahosttools.cuh"
 #include "../cutools/curandhosttools.cuh"
@@ -47,12 +48,9 @@ classes.
 
 --------------------------------------*/
 void fpn::cuNeuralNetworkbase::m_createHandles() {
-    std::cout << "Creating cuDNN Handles!" << "\n";
+    std::cout << "Creating cuDNN Handle!" << "\n";
     cudnnThrowHandler(cudnnCreate(&cudnnHandle));
-    cudnnThrowHandler(cudnnCreateTensorDescriptor(&srcTensorDesc));
-    cudnnThrowHandler(cudnnCreateTensorDescriptor(&dstTensorDesc));
     std::cout << " Running cuDNN version: " << cudnnGetVersion() << "\n\n";
-
     std::cout << "Creating cuBLAS Handles!" << "\n";
     cublasThrowHandler( cublasCreate(&cublasHandle) );
     int version;
@@ -69,11 +67,8 @@ fpn::cuNeuralNetworkbase::m_createHandles()
 
 --------------------------------------*/
 void fpn::cuNeuralNetworkbase::m_destroyHandles() {
-    std::cout << "Destroying cuDNN Handles!" << "\n";
-    cudnnThrowHandler(cudnnDestroyTensorDescriptor(dstTensorDesc));
-    cudnnThrowHandler(cudnnDestroyTensorDescriptor(srcTensorDesc));
+    std::cout << "Destroying cuDNN Handle!" << "\n";
     cudnnThrowHandler(cudnnDestroy(cudnnHandle));
-
     std::cout << "Destroying cuBLAS Handles!" << "\n";
     cublasThrowHandler( cublasDestroy(cublasHandle) );
 };
@@ -102,6 +97,8 @@ void fpn::cuNeuralNetworkbase::m_createNetwork(const std::string templateString)
     }
 
     wbdataSize = ((Nw + Nb) * sizeof(float)) / float(1024*1024);
+    if (trainer) {wbdataSize*=2.0;wbdataSize+=((Nb*sizeof(float))/float(1024*1024));} // Memory req doubled for training (derivatives)
+
     std::cout << "\n  Num. Weights: " << Nw << " -- Num. Biases: " << Nb << " required" << std::endl;
     std::cout << "  Network Device Memory Cost: " << wbdataSize << "MB" << std::endl;
 
@@ -125,7 +122,7 @@ void fpn::cuNeuralNetworkbase::m_createNetwork(const std::string templateString)
         idx += Nw+Nb;
 
         // Locally construct the class and emplace it on the layers vector
-        layers.emplace_back(weight,bias);
+        layers.emplace_back(weight,bias,&cudnnHandle,&cublasHandle,trainer);
         // Load the data to the devices, must call clearDevice() to reset device data.
         layers.back().loadToDevice();
     }
@@ -163,35 +160,40 @@ fname.
 
 --------------------------------------*/
 void fpn::cuNeuralNetworkbase::m_saveNetwork(const std::string &fname) {
-    std::cout << "\nSaving network data!" << std::endl;
-    std::ofstream dataFile (fname, std::ios::out | std::ios::binary);
-    if (!dataFile) {
-        std::stringstream _error;
-        _error << "Error creating file: " << fname;
-        fpnThrowHandler(_error.str());
+
+    if (!layers.empty()) {
+        std::cout << "\nSaving network data!" << std::endl;
+        std::ofstream dataFile (fname);
+        if (!dataFile) {
+            std::stringstream _error;
+            _error << "Error creating file: " << fname;
+            fpnThrowHandler(_error.str());
+        }
+
+        for (auto l : layers) {
+            l.loadFromDevice();
+            dataFile << "$STARTLAYER\n";
+
+            dataFile << "weights=";
+            for (auto w : l.weightAccess())
+                dataFile << w << ",";
+
+            dataFile << "\n";
+
+            dataFile << "biases=";
+            for (auto b : l.biasAccess())
+                dataFile << b << ",";
+
+            dataFile << "\n";
+        }
+
+        dataFile.close();
+    } else {
+        std::cout << "\nCannot save data! Layers not loaded." << std::endl;
     }
-
-    for (auto l : layers) {
-        l.loadFromDevice();
-        dataFile << "$STARTLAYER\n";
-
-        dataFile << "weights=";
-        for (auto w : l.weightAccess())
-            dataFile << w << ",";
-
-        dataFile << "\n";
-
-        dataFile << "biases=";
-        for (auto b : l.biasAccess())
-            dataFile << b << ",";
-
-        dataFile << "\n";
-    }
-
-    dataFile.close();
 };
 
-/*---------Save Network Data----------
+/*---------Load Network Data----------
 
 Load the network from the GPU and save
 it to a file named in the argument
@@ -199,78 +201,56 @@ fname.
 
 --------------------------------------*/
 void fpn::cuNeuralNetworkbase::m_loadNetwork(const std::string &fname) {
-    std::cout << "\nSaving network data!" << std::endl;
-    std::ifstream dataFile (fname, std::ios::in | std::ios::binary);
+    std::regex pattern_nnffile(".*\\.nnf$"); // Ensure only .nnf (Neural Network Format) files are given
+    if (!std::regex_search(fname,pattern_nnffile)) {
+        fpnThrowHandler(std::string("Only .nnf files can be used to construct the cuNeuralNetworkbase class"));
+    }
+
+    std::cout << "Loading the Neural Network data from file: " << fname << std::endl;
+
+    std::string line;
+    std::ifstream dataFile (fname.c_str());
+
     if (!dataFile) {
         std::stringstream _error;
         _error << "Error opening file: " << fname;
         fpnThrowHandler(_error.str());
     }
 
-    std::string line;
+    int expline=-1;
+    bool SAVE=false;
     if (dataFile.is_open()) {
+
+        std::vector<float> weight_v,bias_v;
         while ( getline (dataFile,line) ) {
-            std::cout << line << '\n';
+            if (expline==1) {
+                std::string bias_s(line.substr(line.find_first_of("=")+1));
+                csvreader(bias_s,bias_v);
+                expline=-1;
+                SAVE=true;
+            }
+
+            if (expline==0) {
+                std::string weight_s(line.substr(line.find_first_of("=")+1));
+                csvreader(weight_s,weight_v);
+                expline=1;
+            }
+
+            if (line.find("$STARTLAYER")!=std::string::npos)
+                expline=0;
+
+            if (SAVE) {
+                layers.emplace_back(weight_v,bias_v,&cudnnHandle,&cublasHandle,trainer);
+                layers.back().loadToDevice();
+
+                bias_v.clear();
+                weight_v.clear();
+
+                SAVE=false;
+            }
         }
         dataFile.close();
+    } else {
+        std::cout << "NOT OPEN!" << std::endl;
     }
-
-    dataFile.close();
 };
-
-/*void cuNeuralNetworkbase::fullyConnectedForward(
-                           int& n, int& c, int& h, int& w,
-                           float* srcData, float** dstData,
-                           float* weight_d,float* bias_d)
-{
-    if (n != 1) {
-        FatalError("Not Implemented");
-    }
-    int dim_x = c*h*w;
-    int dim_y = ip.outputs;
-    resize(dim_y, dstData);
-
-    float alpha = float(1), beta = float(1);
-
-
-
-    // place bias into dstData
-    checkCudaErrors( cudaMemcpy(*dstData, bias_d, dim_y*sizeof(float), cudaMemcpyDeviceToDevice) );
-
-    checkCudaErrors( cublasSgemv(cublasHandle, CUBLAS_OP_T,
-                                 dim_x, dim_y,
-                                 &alpha,
-                                 weight_d, dim_x,
-                                 srcData, 1,
-                                 &beta,
-                                 *dstData, 1) );
-
-    h = 1;
-    w = 1;
-    c = dim_y;
-}*/
-
-/*void cuNeuralNetworkbase::activationForward(int n, int c, int h, int w, float* srcData, float** dstData) {
-    cudnnErrorHandler( cudnnSetTensor4dDescriptor(srcTensorDesc,
-                       CUDNN_TENSOR_NCHW,
-                       CUDNN_DATA_FLOAT,
-                       n, c,
-                       h,
-                       w) );
-    cudnnErrorHandler( cudnnSetTensor4dDescriptor(dstTensorDesc,
-                       CUDNN_TENSOR_NCHW,
-                       CUDNN_DATA_FLOAT,
-                       n, c,
-                       h,
-                       w) );
-    float alpha = 1.0f;
-    float beta  = 0.0f;
-    cudnnErrorHandler( cudnnActivationForward(cudnnHandle,
-                       CUDNN_ACTIVATION_RELU,
-                       &alpha,
-                       srcTensorDesc,
-                       srcData,
-                       &beta,
-                       dstTensorDesc,
-                       *dstData) );
-};*/

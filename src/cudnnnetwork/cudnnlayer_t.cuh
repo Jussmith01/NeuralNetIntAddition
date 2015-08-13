@@ -17,9 +17,23 @@ class ReLUlayer_t {
     /* Host Vectors */
     std::vector<float> weight_h,bias_h;
 
+    // cuDNN Handles
+    cudnnHandle_t *cudnnHandle;
+
+    // cuBLAS Handle
+    cublasHandle_t *cublasHandle;
+
     /* Device Pointers */
-    bool dataLoad;
-    float *weight_d,*bias_d;
+    bool dataLoad; // Is the network data set?
+    float *weight_d,*bias_d; // Weights and biases
+    float *dCdw_d,*dCdb_d; // Derivatives
+    float *Z_d; // Z for calculating errors
+
+    /* Data Descriptors */
+    cudnnTensorDescriptor_t srcTensorDesc, dstTensorDesc;
+    bool idataSet; // Is the input data set?
+    int n,c,h,w; // Data Descriptors, n defaults to 1
+    bool trainer;
 
     /* Member Functions */
     void m_loadDataToDevice ();
@@ -27,8 +41,10 @@ class ReLUlayer_t {
     void m_retriveDataFromDevice ();
 
 public:
-    ReLUlayer_t (const std::vector<float> &weight,const std::vector<float> &bias) :
-        weight_h(weight),bias_h(bias),dataLoad(false) // Send layer data to layer type
+    ReLUlayer_t (const std::vector<float> &weight,const std::vector<float> &bias,
+                 cudnnHandle_t *cudnnHandle,cublasHandle_t *cublasHandle,bool traintype) :
+        weight_h(weight),bias_h(bias),dataLoad(false),idataSet(false),n(1),
+        cudnnHandle(cudnnHandle),cublasHandle(cublasHandle),trainer(traintype)
     {
         ID=IDindex;
         ++IDindex;
@@ -49,6 +65,9 @@ public:
         std::cout << "  Clearing Layer " << ID << " from Device..." << std::endl;
         m_clearDataOnDevice();
     }
+
+    /*----------Data Marching Functions------------*/
+    void fullyConnectedForward(float* srcData, float** dstData);
 
     /*------------PUBLIC MEMBER ACCESS-------------*/
     const std::vector<float>& weightAccess() {

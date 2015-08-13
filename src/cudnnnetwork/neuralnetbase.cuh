@@ -6,8 +6,9 @@
 namespace fpn { // Force Prediction Network
 
 enum  Initializers {
-    NNB_CREATE,
-    NNB_LOAD
+    FPN_CREATE_AND_TRAIN,
+    FPN_LOAD_AND_OPT,
+    FPN_LOAD_AND_TRAIN
 };
 
 //________________________________________________________________________//
@@ -23,12 +24,12 @@ class cuNeuralNetworkbase {
 
     // cuDNN Handles
     cudnnHandle_t cudnnHandle;
-    cudnnTensorDescriptor_t srcTensorDesc, dstTensorDesc;
 
     // cuBLAS Handle
     cublasHandle_t cublasHandle;
 
     // Network Layers
+    bool trainer; // Determines whether or not to expect training
     int inlayersize;
     long long int wbdataSize; // Weights and Bias total data size
     std::vector<ReLUlayer_t> layers;
@@ -61,7 +62,6 @@ class cuNeuralNetworkbase {
     //void activationForward(int n, int c, int h, int w, float* srcData, float** dstData);
     //void fullyConnectedForward(int& n, int& c, int& h, int& w,float* srcData, float** dstData);
 
-
     /*-------Primary Constructor--------*/
     cuNeuralNetworkbase () {
         // Get cuda device information and setup device
@@ -78,20 +78,23 @@ public:
         switch (setup) {
             /* This case creates a new network from a network template string stored in
             network nfo and sets it up */
-            case NNB_CREATE: {
+            case FPN_CREATE_AND_TRAIN: {
+                trainer=true; // Always expect training on data upon creation
                 m_createNetwork(networknfo);
                 break;
             };
 
             /* This case loads a network from a saved network file and sets it up */
-            case NNB_LOAD: {
-                std::regex pattern_nnffile(".*\\.nnf$"); // Ensure only .nnf (Neural Network Format) files are given
-                if (!std::regex_search(networknfo,pattern_nnffile))
-                    {fpnThrowHandler(std::string("Only .nnf files can be used to construct the cuNeuralNetworkbase class"));}
+            case FPN_LOAD_AND_OPT: {
+                trainer=false; // Load network and optimize data
+                m_loadNetwork(networknfo);
+                break;
+            };
 
-                std::cout << "Loading the Neural Network data from file: " << networknfo << std::endl;
-                //m_loadNetwork(networkfile);
-
+            /* This case loads a network from a saved network file and sets it up */
+            case FPN_LOAD_AND_TRAIN: {
+                trainer=true; // Load network and train on data
+                m_loadNetwork(networknfo);
                 break;
             };
         }
@@ -99,7 +102,7 @@ public:
 
     /*     Destructor      */
     ~cuNeuralNetworkbase () {
-        m_saveNetwork("networkData.dat");
+        m_saveNetwork("networkData.nnf");
 
         std::cout << "Cleaning up the Neural Network Base class!" << std::endl;
 
@@ -119,6 +122,15 @@ public:
     };
 
     /*-------------Class Public functions----------------*/
+
+    void feedForward(float *srcData,float **dstData) {
+        for (auto l : layers)
+        {
+            l.fullyConnectedForward(srcData,dstData);
+        }
+    };
+
+    void backPropagate(float *srcData,float **dstData) {} ;
 
     /*     Activation Test      */
     /*void ActivationTest ()

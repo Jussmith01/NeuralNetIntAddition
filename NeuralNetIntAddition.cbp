@@ -62,6 +62,11 @@
 			<Option link="1" />
 		</Unit>
 		<Unit filename="src/cudnnnetwork/neuralnetbase.cuh" />
+		<Unit filename="src/cudnnnetwork/neuralnettrainer.cu">
+			<Option compile="1" />
+			<Option link="1" />
+		</Unit>
+		<Unit filename="src/cudnnnetwork/neuralnettrainer.cuh" />
 		<Unit filename="src/cutools/cudahosttools.cuh" />
 		<Unit filename="src/cutools/curandhosttools.cuh" />
 		<Unit filename="src/errorhandling.h" />
@@ -73,6 +78,7 @@
 		<Unit filename="src/neuralnet.h" />
 		<Unit filename="src/neuralnetlayer.hpp" />
 		<Unit filename="src/tools/binaryconversion.hpp" />
+		<Unit filename="src/tools/csvreader.hpp" />
 		<Unit filename="src/tools/micro_timer.cpp" />
 		<Unit filename="src/tools/micro_timer.h" />
 		<Unit filename="src/tools/random.hpp" />
