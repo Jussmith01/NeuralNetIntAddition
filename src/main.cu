@@ -13,21 +13,25 @@
 #include <cudnn.h>
 #include <cublas_v2.h>
 
+/* Error Handling */
+#include "errorhandling.h"
+
 /* Tools */
 #include "tools/micro_timer.h"
 //#include "tools/binaryconversion.hpp"
 
 /* Cuda Tools */
-#include "cutools/cudaerrorhandling.cuh"
-#include "cutools/neuralnetbase.cuh"
+#include "cudnnnetwork/neuralnetbase.cuh"
 
-inline void sigsegvHandler (int param)
-{
-    sigsegvErrorHandler(std::string("A Segmentation violation has been detected. Shutting down the program nicely."));
+inline void sigsegvHandler (int param) {
+    signalHandler(std::string("A Segmentation violation has been detected. Attempting to cleanup..."));
 }
 
-int main(int argc, char *argv[])
-{
+inline void terminationHandler (int param) {
+    signalHandler(std::string("A termination signal has been detected. Attempting to cleanup..."));
+}
+
+int main(int argc, char *argv[]) {
     /*if (argv[1]==NULL || argv[2]==NULL || argv[3]==NULL || argv[4]==NULL || argv[5]==NULL || argv[6]==NULL)
     {
         std::cout << "Error: Missing arguments!" << std::endl;
@@ -42,10 +46,10 @@ int main(int argc, char *argv[])
         exit(1);
     }*/
 
-    // Setup special signaling
+    /* Setup special signaling */
     signal(SIGSEGV,sigsegvHandler);
-
-    //raise(SIGINT);
+    signal(SIGINT,terminationHandler);
+    signal(SIGTERM,terminationHandler);
 
     using namespace fpn;
 
@@ -53,10 +57,7 @@ int main(int argc, char *argv[])
 
     try {
 
-    int * gay;
-    gay[0]=1;
-
-    cuNeuralNetworkbase nnb("32:8192:8192:8192:8192:8192:8192:8192:8192:4096:32",NNB_CREATE);
+    cuNeuralNetworkbase nnb("2:3:2",NNB_CREATE);
 
     } catch (std::string _caught) {
 
@@ -65,6 +66,8 @@ int main(int argc, char *argv[])
     }
 
     signal(SIGSEGV,SIG_DFL);
+    signal(SIGINT,SIG_DFL);
+    signal(SIGTERM,SIG_DFL);
     //nnb.ActivationTest();
 
     /*double eta = atof(argv[1]);

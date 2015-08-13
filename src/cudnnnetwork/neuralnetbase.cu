@@ -2,18 +2,21 @@
 #include <iostream>
 #include <vector>
 #include <sstream>
+#include <fstream>
 #include <string>
 #include <cstring>
 #include <regex>
+#include <signal.h>
 
 // CUDA Headers
 #include <cuda.h>
 #include <cudnn.h>
 #include <cublas_v2.h>
 
-#include "cudaerrorhandling.cuh"
-#include "cudahosttools.cuh"
-#include "curandhosttools.cuh"
+#include "../errorhandling.h"
+
+#include "../cutools/cudahosttools.cuh"
+#include "../cutools/curandhosttools.cuh"
 
 #include "neuralnetbase.cuh"
 
@@ -33,7 +36,7 @@ void fpn::cuNeuralNetworkbase::m_setupCudaDevice() {
 
     printDevProps(devprops);
 
-    cudaThrowHandler(cudaSetDevice(1));
+    cudaThrowHandler(cudaSetDevice(0));
 };
 
 /*-------Setup CUDA Libraries---------
@@ -80,20 +83,21 @@ void fpn::cuNeuralNetworkbase::m_destroyHandles() {
 --------------------------------------*/
 void fpn::cuNeuralNetworkbase::m_createNetwork(const std::string templateString) {
     std::regex pattern_nntformat("^([0-9]{1,8}:){1,64}[0-9]{1,8}$"); // Ensure proper network template formatting
-    if (!std::regex_search(templateString,pattern_nntformat))
-        {fpnThrowHandler(std::string("The network creation template syntax is incorrect."));}
+    if (!std::regex_search(templateString,pattern_nntformat)) {
+        fpnThrowHandler(std::string("The network creation template syntax is incorrect."));
+    }
 
     std::cout << "Creating a Neural Network from template " << std::endl;
     std::vector<unsigned int> netarch(m_parseNetworkTemplate(templateString));
 
     inlayersize = netarch.front();
     std::cout << " Neural net architecture requested: \n  Input layer size=" << netarch.front() << " followed by layers of size ";
-    unsigned int Nw = 0; int Nb = 0;
+    unsigned int Nw = 0;
+    int Nb = 0;
     std::vector<unsigned int>::iterator it;
-    for (it=netarch.begin()+1;it!=netarch.end();++it)
-    {
+    for (it=netarch.begin()+1; it!=netarch.end(); ++it) {
         std::cout << *it << " ";
-        Nw += *(it-1) * *it;
+        Nw += *(it-1) **it;
         Nb += *it;
     }
 
@@ -107,39 +111,40 @@ void fpn::cuNeuralNetworkbase::m_createNetwork(const std::string templateString)
 
     std::cout << "\n Building Neural Network Layers: " << std::endl;
     unsigned long long int idx=0;
-    for (it=netarch.begin()+1;it!=netarch.end();++it)
-    {
-        Nw = *(it-1) * *it;
+    for (it=netarch.begin()+1; it!=netarch.end(); ++it) {
+        Nw = *(it-1) **it;
         Nb = *it;
         std::cout << "   Layer " << it-netarch.begin()-1  << " w/ " << Nw << " weights and " << Nb << " bias.\n";
 
         std::vector<float> weight(Nw);
         std::vector<float> bias(Nb);
 
-        std::memcpy(&weight[0],&rn[idx   ],Nw*sizeof(float));
-        std::memcpy(&bias  [0],&rn[idx+Nw],Nb*sizeof(float));
+        std::memcpy(&weight[0],&rn[idx]   ,Nw*sizeof(float));
+        std::memcpy(&bias[0]  ,&rn[idx+Nw],Nb*sizeof(float));
 
         idx += Nw+Nb;
 
         // Locally construct the class and emplace it on the layers vector
         layers.emplace_back(weight,bias);
         // Load the data to the devices, must call clearDevice() to reset device data.
-        layers.back().loadDevice();
+        layers.back().loadToDevice();
     }
-
-    //std::cout << " Neural net architecture requested: " << std::endl;
-
 };
 
-/*-------Create Neural Network-------
+/*-------Parse Network Template-------
+
+Parse a string formatted as:
+16:32:48:2
+into a vector of uints. This is used
+to define the neural network archit-
+ecture.
 
 --------------------------------------*/
 std::vector<unsigned int> fpn::cuNeuralNetworkbase::m_parseNetworkTemplate(const std::string templateString) {
     std::vector<unsigned int> netarch;
     std::string wks(templateString);
 
-    while (wks.find_first_of(":")!=std::string::npos)
-    {
+    while (wks.find_first_of(":")!=std::string::npos) {
         size_t pos = wks.find_first_of(":");
         netarch.push_back(atoi(wks.substr(0,pos).c_str()));
         wks = wks.substr(pos+1);
@@ -148,6 +153,69 @@ std::vector<unsigned int> fpn::cuNeuralNetworkbase::m_parseNetworkTemplate(const
     netarch.push_back(atoi(wks.c_str()));
 
     return netarch;
+};
+
+/*---------Save Network Data----------
+
+Load the network from the GPU and save
+it to a file named in the argument
+fname.
+
+--------------------------------------*/
+void fpn::cuNeuralNetworkbase::m_saveNetwork(const std::string &fname) {
+    std::cout << "\nSaving network data!" << std::endl;
+    std::ofstream dataFile (fname, std::ios::out | std::ios::binary);
+    if (!dataFile) {
+        std::stringstream _error;
+        _error << "Error creating file: " << fname;
+        fpnThrowHandler(_error.str());
+    }
+
+    for (auto l : layers) {
+        l.loadFromDevice();
+        dataFile << "$STARTLAYER\n";
+
+        dataFile << "weights=";
+        for (auto w : l.weightAccess())
+            dataFile << w << ",";
+
+        dataFile << "\n";
+
+        dataFile << "biases=";
+        for (auto b : l.biasAccess())
+            dataFile << b << ",";
+
+        dataFile << "\n";
+    }
+
+    dataFile.close();
+};
+
+/*---------Save Network Data----------
+
+Load the network from the GPU and save
+it to a file named in the argument
+fname.
+
+--------------------------------------*/
+void fpn::cuNeuralNetworkbase::m_loadNetwork(const std::string &fname) {
+    std::cout << "\nSaving network data!" << std::endl;
+    std::ifstream dataFile (fname, std::ios::in | std::ios::binary);
+    if (!dataFile) {
+        std::stringstream _error;
+        _error << "Error opening file: " << fname;
+        fpnThrowHandler(_error.str());
+    }
+
+    std::string line;
+    if (dataFile.is_open()) {
+        while ( getline (dataFile,line) ) {
+            std::cout << line << '\n';
+        }
+        dataFile.close();
+    }
+
+    dataFile.close();
 };
 
 /*void cuNeuralNetworkbase::fullyConnectedForward(

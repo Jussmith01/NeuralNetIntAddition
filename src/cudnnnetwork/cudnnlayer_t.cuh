@@ -18,6 +18,7 @@ class ReLUlayer_t {
     std::vector<float> weight_h,bias_h;
 
     /* Device Pointers */
+    bool dataLoad;
     float *weight_d,*bias_d;
 
     /* Member Functions */
@@ -27,26 +28,38 @@ class ReLUlayer_t {
 
 public:
     ReLUlayer_t (const std::vector<float> &weight,const std::vector<float> &bias) :
-        weight_h(weight),bias_h(bias) // Send layer data to layer type
+        weight_h(weight),bias_h(bias),dataLoad(false) // Send layer data to layer type
     {
         ID=IDindex;
         ++IDindex;
     };
 
-    void loadDevice()
-    {
+    /*--------------PUBLIC FUNCTIONS---------------*/
+    void loadToDevice() {
         std::cout << "   Loading Layer " << ID << " Data to Device..." << std::endl;
         m_loadDataToDevice();
     }
 
-    void clearDevice()
-    {
+    void loadFromDevice() {
+        std::cout << "   Loading Layer " << ID << " Data from Device..." << std::endl;
+        m_retriveDataFromDevice();
+    }
+
+    void clearDevice() {
         std::cout << "  Clearing Layer " << ID << " from Device..." << std::endl;
         m_clearDataOnDevice();
     }
 
-    ~ReLUlayer_t () {
+    /*------------PUBLIC MEMBER ACCESS-------------*/
+    const std::vector<float>& weightAccess() {
+        return weight_h;
     }
+
+    const std::vector<float>& biasAccess() {
+        return bias_h;
+    }
+
+    ~ReLUlayer_t () {}
 };
 
 };

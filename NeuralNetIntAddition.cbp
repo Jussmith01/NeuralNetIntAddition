@@ -52,19 +52,19 @@
 			<Add library="cublas" />
 			<Add library="curand" />
 		</Linker>
-		<Unit filename="src/cutools/cudaerrorhandling.cuh" />
+		<Unit filename="src/cudnnnetwork/cudnnlayer_t.cu">
+			<Option compile="1" />
+			<Option link="1" />
+		</Unit>
+		<Unit filename="src/cudnnnetwork/cudnnlayer_t.cuh" />
+		<Unit filename="src/cudnnnetwork/neuralnetbase.cu">
+			<Option compile="1" />
+			<Option link="1" />
+		</Unit>
+		<Unit filename="src/cudnnnetwork/neuralnetbase.cuh" />
 		<Unit filename="src/cutools/cudahosttools.cuh" />
-		<Unit filename="src/cutools/cudnnlayer_t.cu">
-			<Option compile="1" />
-			<Option link="1" />
-		</Unit>
-		<Unit filename="src/cutools/cudnnlayer_t.cuh" />
 		<Unit filename="src/cutools/curandhosttools.cuh" />
-		<Unit filename="src/cutools/neuralnetbase.cu">
-			<Option compile="1" />
-			<Option link="1" />
-		</Unit>
-		<Unit filename="src/cutools/neuralnetbase.cuh" />
+		<Unit filename="src/errorhandling.h" />
 		<Unit filename="src/main.cu">
 			<Option compile="1" />
 			<Option link="1" />

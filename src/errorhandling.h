@@ -19,7 +19,7 @@
 #define cudaFatalError(_errstr)                                                               \
 {                                                                                             \
     std::cerr <<  _errstr << std::endl;                                                       \
-    std::cerr << " Resetting CUDA Device and exiting! " << std::endl;                         \
+    std::cerr << " Resetting CUDA Device and returning! " << std::endl;                         \
     cudaDeviceReset();                                                                        \
     return(EXIT_FAILURE);                                                                     \
 };
@@ -76,16 +76,15 @@
     }                                                                                           \
 };
 
-#define sigsegvErrorHandler(_errchk)                                                            \
+#define signalHandler(_errchk)                                                            \
 {                                                                                               \
     if (!_errchk.empty())                                                                       \
     {                                                                                           \
-        std::cerr <<  "ERROR: Segmentation Violation Detected!" << std::endl;                   \
         std::stringstream _error;                                                               \
         _error << "\nError -- \"" << _errchk << "\" \n";                                        \
-        _error << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;               \
-        _error << " in function -- " << __FUNCTION__ << "()" << std::endl;                      \
-        std::cerr << _error.str();                                                                    \
-        throw _error.str();                                                                     \
+        std::cerr << _error.str();                                                              \
+        cudaDeviceReset();                                                                      \
+        std::cerr << "Exiting with Failure!\n";                                                 \
+        exit(EXIT_FAILURE);                                                                     \
     }                                                                                           \
 };

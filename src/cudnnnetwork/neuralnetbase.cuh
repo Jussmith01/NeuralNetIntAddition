@@ -47,10 +47,10 @@ class cuNeuralNetworkbase {
     void m_createNetwork(const std::string file);
 
     /*  Network Save */
-    void m_saveNetwork(const std::string file);
+    void m_saveNetwork(const std::string &file);
 
     /*  Network Load */
-    void m_loadNetwork(const std::string file);
+    void m_loadNetwork(const std::string &file);
 
     /*  Builds the individual layers from input weights and biases */
     void m_buildLayers(std::vector<float> data_wh,std::vector<float> data_bh);
@@ -99,7 +99,9 @@ public:
 
     /*     Destructor      */
     ~cuNeuralNetworkbase () {
-        std::cout << "\nCleaning up the Neural Network Base class!" << std::endl;
+        m_saveNetwork("networkData.dat");
+
+        std::cout << "Cleaning up the Neural Network Base class!" << std::endl;
 
         // Clear Layers
         while (!layers.empty())
