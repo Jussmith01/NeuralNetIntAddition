@@ -69,7 +69,6 @@ public:
     /*----------Data Marching Functions------------*/
     void fullyConnectedForward(int c,float* srcData, float* dstData);
     void activationForward(int c,float* srcData, float* dstData);
-    void meanSquaredErrorCostFunction(int c,float* srcData, float* dstData);
 
     /*------------PUBLIC MEMBER ACCESS-------------*/
     const std::vector<float>& weightAccess() {

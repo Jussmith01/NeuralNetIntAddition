@@ -130,9 +130,9 @@ public:
         }
 
         // Verify that the output data is of the correct size for the network.
-        if ( layers.back().biasAccess().size() != No ) {
+        if ( layers.back().biasAccess().size() != No/Nd ) {
             std::stringstream ss;
-            ss << "The training data output size (" << No
+            ss << "The training data output size (" << No/Nd
                << ") != expected from layers output size ("
                << layers.back().biasAccess().size() << ")!";
             fpnThrowHandler(ss.str());

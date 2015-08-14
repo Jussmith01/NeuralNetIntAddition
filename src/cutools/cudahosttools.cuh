@@ -38,7 +38,7 @@ inline void printDevProps(std::vector<cudaDeviceProp> &devprops)
 };
 
 // FOR TESTING PURPOSES!!!!!!!
-void printCudaData(int size,float *data,std::string message) {
+inline void printCudaData(int size,float *data,std::string message) {
     std::vector<float> test(size);
     cudaThrowHandler( cudaMemcpy(&test[0],data,size*sizeof(float),cudaMemcpyDeviceToHost) );
     std::cout << message << "\n";
@@ -56,7 +56,7 @@ for use with different sized data
 structures.
 
 --------------------------------------*/
-void cu_resize(int size, float *data) {
+inline void cu_resize(int size, float *data) {
     if (data != NULL) {
         cudaThrowHandler( cudaFree(data) );
     }
