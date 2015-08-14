@@ -124,17 +124,18 @@ public:
     /*-------------Class Public functions----------------*/
 
     void feedForward(int Ns,float *srcData,int Nc,float *cmpData,int Nd) {
-        float *wk1Data_d,*wk2Data_d; // Working Data
+        float *wk1Data_d=NULL,*wk2Data_d=NULL; // Working Data
 
         /* Allocate Device Data */
-        cudaThrowHandler(cudaMalloc((void**)&wk1Data_d,Ns*sizeof(float)));
+        cudaThrowHandler( cudaMalloc((void**)&wk1Data_d,Ns*sizeof(float)) );
+        cudaThrowHandler( cudaMalloc((void**)&wk2Data_d,   sizeof(float)) );
 
         /* Copy starting data */
         cudaThrowHandler( cudaMemcpy(wk1Data_d,srcData,Ns*sizeof(float),cudaMemcpyDeviceToDevice) );
 
         for (auto l : layers)
         {
-            l.fullyConnectedForward(Nd,wk1Data_d,&wk2Data_d);
+            l.fullyConnectedForward(Nd,wk1Data_d,wk2Data_d);
         }
     };
 

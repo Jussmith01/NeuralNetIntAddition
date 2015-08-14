@@ -56,7 +56,7 @@
     {                                                                                           \
         std::cerr <<  "ERROR: cuBLAS throw detected!" << std::endl;                             \
         std::stringstream _error;                                                               \
-        _error << "cuDNN Error -- Error Code: \"" << _errchk << "\"";                           \
+        _error << "cuBLAS Error -- Error Code: \"" << _errchk << "\"";                           \
         _error << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;               \
         _error << " in function -- " << __FUNCTION__ << "()" <<  std::endl;                     \
         throw _error.str();                                                                     \

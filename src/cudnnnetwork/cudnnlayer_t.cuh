@@ -39,7 +39,7 @@ class ReLUlayer_t {
     void m_loadDataToDevice ();
     void m_clearDataOnDevice ();
     void m_retriveDataFromDevice ();
-    void m_resize(int size, float **data);
+    void m_resize(int size, float *data);
 
 public:
     ReLUlayer_t (const std::vector<float> &weight,const std::vector<float> &bias,
@@ -47,9 +47,6 @@ public:
         weight_h(weight),bias_h(bias),dataLoad(false),idataSet(false),n(1),
         cudnnHandle(cudnnHandle),cublasHandle(cublasHandle),trainer(traintype)
     {
-        w = weight_h.size();
-        b = bias_h.size();
-
         ID=IDindex;
         ++IDindex;
     };
@@ -71,7 +68,7 @@ public:
     }
 
     /*----------Data Marching Functions------------*/
-    void fullyConnectedForward(int c,float* srcData, float** dstData);
+    void fullyConnectedForward(int c,float* srcData, float* dstData);
 
     /*------------PUBLIC MEMBER ACCESS-------------*/
     const std::vector<float>& weightAccess() {
