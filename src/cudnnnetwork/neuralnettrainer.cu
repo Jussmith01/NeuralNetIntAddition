@@ -37,6 +37,7 @@ void fpn::cuNeuralNetworkTrainer::m_loadTrainingData() {
         pcsvreader(line,expectData,inparams.edBeg,inparams.edEnd,1.0,0.0);
     }
 
+
     infile.close();
 };
 
@@ -48,7 +49,7 @@ void fpn::cuNeuralNetworkTrainer::m_setDataOnDevice() {
     int ns = inputData.size ();
     int nd = expectData.size();
 
-    if (ns == 0 || nd == 0)
+    if ( ns == 0 || nd == 0 )
         fpnThrowHandler(std::string("Input data sets cannot be empty!"));
 
     std::cout << "Allocating space and loading training data to the device...\n";

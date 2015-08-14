@@ -24,59 +24,63 @@
     return(EXIT_FAILURE);                                                                     \
 };
 
-#define cudaThrowHandler(_errchk)                                                               \
-{                                                                                               \
-    if (_errchk != cudaSuccess)                                                                 \
-    {                                                                                           \
-        std::cerr <<  "ERROR: CUDA throw detected!" << std::endl;                               \
-        std::stringstream _error;                                                               \
-        _error << "CUDA Error -- \"" << cudaGetErrorString(_errchk) << "\"\n";                  \
-        _error << _errchk << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;    \
-        _error << " in function -- " << __FUNCTION__ << "()" <<  std::endl;                     \
-        throw _error.str();                                                                     \
-    }                                                                                           \
+#define cudaThrowHandler(_errchk)                                                                  \
+{                                                                                                  \
+    if (_errchk != cudaSuccess)                                                                    \
+    {                                                                                              \
+        std::cerr <<  "\nERROR: CUDA throw detected! Attempting to shut down nicely!" << std::endl;\
+        std::stringstream _error;                                                                  \
+        _error << "CUDA Error -- \"" << cudaGetErrorString(_errchk) << "\"\n";                     \
+        _error << _errchk << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;       \
+        _error << " in function -- " << __FUNCTION__ << "()" <<  std::endl;                        \
+        std::cerr << _error.str() << std::endl;                                                          \
+        throw _error.str();                                                                        \
+    }                                                                                              \
 };
 
-#define cudnnThrowHandler(_errchk)                                                              \
-{                                                                                               \
-    if (_errchk != CUDNN_STATUS_SUCCESS)                                                        \
-    {                                                                                           \
-        std::cerr <<  "ERROR: cuDNN throw detected!" << std::endl;                              \
-        std::stringstream _error;                                                               \
-        _error << "cuDNN Error -- \"" << cudnnGetErrorString(_errchk) << "\"\n";                \
-        _error << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;               \
-        _error << " in function -- " << __FUNCTION__ << "()" <<  std::endl;                     \
-        throw _error.str();                                                                     \
-    }                                                                                           \
+#define cudnnThrowHandler(_errchk)                                                                  \
+{                                                                                                   \
+    if (_errchk != CUDNN_STATUS_SUCCESS)                                                            \
+    {                                                                                               \
+        std::cerr <<  "\nERROR: cuDNN throw detected! Attempting to shut down nicely!" << std::endl;\
+        std::stringstream _error;                                                                   \
+        _error << "cuDNN Error -- \"" << cudnnGetErrorString(_errchk) << "\"\n";                    \
+        _error << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;                   \
+        _error << " in function -- " << __FUNCTION__ << "()" <<  std::endl;                         \
+        std::cerr << _error.str() << std::endl;                                                           \
+        throw _error.str();                                                                         \
+    }                                                                                               \
 };
 
-#define cublasThrowHandler(_errchk)                                                             \
-{                                                                                               \
-    if (_errchk != CUBLAS_STATUS_SUCCESS)                                                       \
-    {                                                                                           \
-        std::cerr <<  "ERROR: cuBLAS throw detected!" << std::endl;                             \
-        std::stringstream _error;                                                               \
-        _error << "cuBLAS Error -- Error Code: \"" << _errchk << "\"";                           \
-        _error << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;               \
-        _error << " in function -- " << __FUNCTION__ << "()" <<  std::endl;                     \
-        throw _error.str();                                                                     \
-    }                                                                                           \
+#define cublasThrowHandler(_errchk)                                                                  \
+{                                                                                                    \
+    if (_errchk != CUBLAS_STATUS_SUCCESS)                                                            \
+    {                                                                                                \
+        std::cerr <<  "\nERROR: cuBLAS throw detected! Attempting to shut down nicely!" << std::endl;\
+        std::stringstream _error;                                                                    \
+        _error << "cuBLAS Error -- Error Code: \"" << _errchk << "\"";                               \
+        _error << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;                    \
+        _error << " in function -- " << __FUNCTION__ << "()" <<  std::endl;                          \
+        std::cerr << _error.str() << std::endl;                                                            \
+        throw _error.str();                                                                          \
+    }                                                                                                \
 };
 
-#define fpnThrowHandler(_errchk)                                                                \
-{                                                                                               \
-    if (!_errchk.empty())                                                                       \
-    {                                                                                           \
-        std::cerr <<  "ERROR: fpn throw detected!" << std::endl;                                \
-        std::stringstream _error;                                                               \
-        _error << "\nFPN Error -- \"" << _errchk << "\" \n";                                    \
-        _error << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;               \
-        _error << " in function -- " << __FUNCTION__ << "()" << std::endl;                      \
-        throw _error.str();                                                                     \
-    }                                                                                           \
+#define fpnThrowHandler(_errchk)                                                                  \
+{                                                                                                 \
+    if (!_errchk.empty())                                                                         \
+    {                                                                                             \
+        std::cerr <<  "\nERROR: FPN throw detected! Attempting to shut down nicely!" << std::endl;\
+        std::stringstream _error;                                                                 \
+        _error << "\nFPN Error -- \"" << _errchk << "\" \n";                                      \
+        _error << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;                 \
+        _error << " in function -- " << __FUNCTION__ << "()" << std::endl;                        \
+        std::cerr << _error.str() << std::endl;                                                         \
+        throw _error.str();                                                                       \
+    }                                                                                             \
 };
 
-#define signalHandler(_errchk)                                                            \
+#define signalHandler(_errchk)                                                                  \
 {                                                                                               \
     if (!_errchk.empty())                                                                       \
     {                                                                                           \

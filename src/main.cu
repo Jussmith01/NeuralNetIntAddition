@@ -60,6 +60,18 @@ int main(int argc, char *argv[]) {
 
     } catch (std::string _caught) {
 
+    /* NOTE! This will only work if used within main!
+
+    It's purpose is to catch any throws defined within
+    errorhandling.h header file. Doing things in this
+    order allows the program to shutdown and save the
+    network (as long as the the heap is uncorrupted as
+    can occur in a segfault) and release the device and
+    memory normally. This ensures that any internal
+    problems will result in the network being stored
+    for future use. No string catched should be added
+
+    */
     cudaFatalError(_caught);
 
     }

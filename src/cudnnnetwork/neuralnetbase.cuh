@@ -1,6 +1,7 @@
 #ifndef NNBASE_CU
 #define NNBASE_CU
 
+#include "../cutools/cublashosttools.cuh"
 #include "cudnnlayer_t.cuh"
 
 namespace fpn { // Force Prediction Network
@@ -76,27 +77,27 @@ public:
     /*   Network Creation/Load Constructor     */
     cuNeuralNetworkbase(const std::string networknfo,enum Initializers setup) : cuNeuralNetworkbase() {
         switch (setup) {
-            /* This case creates a new network from a network template string stored in
-            network nfo and sets it up */
-            case FPN_CREATE_AND_TRAIN: {
+        /* This case creates a new network from a network template string stored in
+        network nfo and sets it up */
+        case FPN_CREATE_AND_TRAIN: {
                 trainer=true; // Always expect training on data upon creation
                 m_createNetwork(networknfo);
                 break;
             };
 
-            /* This case loads a network from a saved network file and sets it up */
-            case FPN_LOAD_AND_OPT: {
-                trainer=false; // Load network and optimize data
-                m_loadNetwork(networknfo);
-                break;
-            };
+        /* This case loads a network from a saved network file and sets it up */
+        case FPN_LOAD_AND_OPT: {
+            trainer=false; // Load network and optimize data
+            m_loadNetwork(networknfo);
+            break;
+        };
 
-            /* This case loads a network from a saved network file and sets it up */
-            case FPN_LOAD_AND_TRAIN: {
-                trainer=true; // Load network and train on data
-                m_loadNetwork(networknfo);
-                break;
-            };
+        /* This case loads a network from a saved network file and sets it up */
+        case FPN_LOAD_AND_TRAIN: {
+            trainer=true; // Load network and train on data
+            m_loadNetwork(networknfo);
+            break;
+        };
         }
     }
 
@@ -107,12 +108,10 @@ public:
         std::cout << "Cleaning up the Neural Network Base class!" << std::endl;
 
         // Clear Layers
-        while (!layers.empty())
-        {
+        while (!layers.empty()) {
             layers.back().clearDevice();
             layers.pop_back();
         }
-
 
         // Clear device properties
         devprops.clear();
@@ -122,8 +121,24 @@ public:
     };
 
     /*-------------Class Public functions----------------*/
+    void feedForward(int Ns,float *srcData,int No,float *cmpData,int Nd) {
+        // Verify that the input data is of the correct size for the network.
+        if ( Ns/Nd != inlayersize ) {
+            std::stringstream ss;
+            ss << "The training data input size (" << Ns/Nd << ") != expected from layers sizes (" << inlayersize << ")!";
+            fpnThrowHandler(ss.str());
+        }
 
-    void feedForward(int Ns,float *srcData,int Nc,float *cmpData,int Nd) {
+        // Verify that the output data is of the correct size for the network.
+        if ( layers.back().biasAccess().size() != No ) {
+            std::stringstream ss;
+            ss << "The training data output size (" << No
+               << ") != expected from layers output size ("
+               << layers.back().biasAccess().size() << ")!";
+            fpnThrowHandler(ss.str());
+        }
+
+
         float *wk1Data_d=NULL,*wk2Data_d=NULL; // Working Data
 
         /* Allocate Device Data */
@@ -133,14 +148,16 @@ public:
         /* Copy starting data */
         cudaThrowHandler( cudaMemcpy(wk1Data_d,srcData,Ns*sizeof(float),cudaMemcpyDeviceToDevice) );
 
-        for (auto l : layers)
-        {
+        for (auto l : layers) {
             l.fullyConnectedForward(Nd,wk1Data_d,wk2Data_d);
+            l.activationForward    (Nd,wk2Data_d,wk1Data_d);
         }
+
+        meanSquaredErrorCostFunction(cublasHandle,Nd,No,cmpData,wk1Data_d);
+
     };
 
     void backPropagate(float *srcData,float **dstData) {
-
 
     };
 

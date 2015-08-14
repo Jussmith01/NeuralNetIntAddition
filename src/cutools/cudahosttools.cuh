@@ -1,6 +1,8 @@
 #ifndef CUDA_HOST_TOOLS_CU
 #define CUDA_HOST_TOOLS_CU
 
+#include <cuda.h>
+
 namespace fpn
 {
 
@@ -34,6 +36,32 @@ inline void printDevProps(std::vector<cudaDeviceProp> &devprops)
 
     std::cout << "|---------------------------------------------------|\n\n";
 };
+
+// FOR TESTING PURPOSES!!!!!!!
+void printCudaData(int size,float *data,std::string message) {
+    std::vector<float> test(size);
+    cudaThrowHandler( cudaMemcpy(&test[0],data,size*sizeof(float),cudaMemcpyDeviceToHost) );
+    std::cout << message << "\n";
+    for (auto i : test)
+    {
+        std::cout << i << " ";
+    }
+    std::cout << "\n";
+};
+
+/*--------Resize a CUDA Container-------
+
+This function resizes a CUDA container
+for use with different sized data
+structures.
+
+--------------------------------------*/
+void cu_resize(int size, float *data) {
+    if (data != NULL) {
+        cudaThrowHandler( cudaFree(data) );
+    }
+    cudaThrowHandler( cudaMalloc((void**)&data, size*sizeof(float)) );
+}
 
 };
 

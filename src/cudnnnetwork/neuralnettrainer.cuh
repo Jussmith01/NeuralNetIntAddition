@@ -46,8 +46,7 @@ class cuNeuralNetworkTrainer : public cuNeuralNetworkbase {
 public:
 
     cuNeuralNetworkTrainer(csvdataStructure datastruct,std::string init,Initializers type) :
-            cuNeuralNetworkbase(init,type),inparams(datastruct)
-    {
+            cuNeuralNetworkbase(init,type),inparams(datastruct) {
         std::cout << "Building Training Class and Loading Training Data!\n";
         m_loadTrainingData();
         m_setDataOnDevice();

@@ -13,44 +13,22 @@
 
 #include "../errorhandling.h"
 
+#include "../cutools/cudahosttools.cuh"
 #include "cudnnlayer_t.cuh"
 
 // Declare Layer ID Counter
 int fpn::ReLUlayer_t::IDindex = 0;
 
-void printCudaData(int size,float *data)
-{
-    std::vector<float> test(size);
-    cudaThrowHandler( cudaMemcpy(&test[0],data,size*sizeof(float),cudaMemcpyDeviceToHost) );
-    std::cout << "CHECK DATA:\n";
-    for (auto i : test)
-    {
-        std::cout << i << " ";
-    }
-    std::cout << "\n";
-};
-
-
-/*--------Resize a CUDA Container-------
-
-
---------------------------------------*/
-void fpn::ReLUlayer_t::m_resize(int size, float *data) {
-    if (data != NULL) {
-        cudaThrowHandler( cudaFree(data) );
-    }
-    cudaThrowHandler( cudaMalloc((void**)&data, size*sizeof(float)) );
-}
-
 /*-----Load Layer Data to Device------
 
+Allocate device space and load data.
 
 --------------------------------------*/
 void fpn::ReLUlayer_t::m_loadDataToDevice() {
     w = weight_h.size();
     b =   bias_h.size();
 
-    if (w == 0 || b == 0)
+    if ( w == 0 || b == 0 )
         fpnThrowHandler(std::string("Weights and/or biases cannot be empty."));
 
     cudnnThrowHandler(cudnnCreateTensorDescriptor(&srcTensorDesc));
@@ -62,11 +40,11 @@ void fpn::ReLUlayer_t::m_loadDataToDevice() {
         cudaThrowHandler(cudaMalloc((void**)&bias_d  ,b*sizeof(float)));
     }
 
-    /* Allocate Cost Derivatives on Device */
+    /* Allocate Cost Derivatives and Z storage on Device, if training */
     if (trainer) {
         cudaThrowHandler(cudaMalloc((void**)&dCdw_d,w*sizeof(float)));
         cudaThrowHandler(cudaMalloc((void**)&dCdb_d,b*sizeof(float)));
-        cudaThrowHandler(cudaMalloc((void**)&Z_d,b*sizeof(float)));
+        cudaThrowHandler(cudaMalloc((void**)&Z_d,   b*sizeof(float)));
     }
 
 
@@ -79,6 +57,7 @@ void fpn::ReLUlayer_t::m_loadDataToDevice() {
 
 /*--------Clear Data on Device--------
 
+Cleanup the device storage.
 
 --------------------------------------*/
 void fpn::ReLUlayer_t::m_clearDataOnDevice() {
@@ -106,6 +85,7 @@ void fpn::ReLUlayer_t::m_clearDataOnDevice() {
 
 /*-----Retrieve Data from Device------
 
+Get weights and biases from the device.
 
 --------------------------------------*/
 void fpn::ReLUlayer_t::m_retriveDataFromDevice() {
@@ -137,46 +117,55 @@ void fpn::ReLUlayer_t::fullyConnectedForward(int c,float* srcData, float* dstDat
 
     int dim_x = w/b;
     int dim_y = b;
-    m_resize(dim_y*c,dstData);
+    cu_resize(dim_y*c,dstData);
 
     float alpha = float(1), beta = float(1);
 
-    // place bias into dstData
+    /* Loop over all data sets */
     for (int i=0; i<c; ++i) {
+        /* Copy the biases into dstData at a specific index */
         cudaThrowHandler( cudaMemcpy(dstData+i*dim_y,bias_d,dim_y*sizeof(float),cudaMemcpyDeviceToDevice) );
+
+        /*  */
         cublasThrowHandler( cublasSgemv(*cublasHandle, CUBLAS_OP_T,
                                         dim_x, dim_y,
                                         &alpha,
                                         weight_d, dim_x,
-                                        srcData, 1,
+                                        srcData+i*dim_x, 1,
                                         &beta,
-                                        dstData, 1) );
+                                        dstData+i*dim_y, 1) );
     }
 
-    //printCudaData(dim_y*c,dstData);
+    printCudaData(dim_y*c,dstData,"MULT dstData: ");
 };
 
-/*void cuNeuralNetworkbase::activationForward(int n, int c, int h, int w, float* srcData, float** dstData) {
-    cudnnErrorHandler( cudnnSetTensor4dDescriptor(srcTensorDesc,
+void fpn::ReLUlayer_t::activationForward(int c,float* srcData, float* dstData) {
+    cu_resize(b*c,dstData);
+
+    printCudaData(b*c,srcData,"ACT1 srcData: ");
+
+    cudnnThrowHandler( cudnnSetTensor4dDescriptor(srcTensorDesc,
                        CUDNN_TENSOR_NCHW,
                        CUDNN_DATA_FLOAT,
-                       n, c,
-                       h,
-                       w) );
-    cudnnErrorHandler( cudnnSetTensor4dDescriptor(dstTensorDesc,
+                       1, n,
+                       b,
+                       c) );
+    cudnnThrowHandler( cudnnSetTensor4dDescriptor(dstTensorDesc,
                        CUDNN_TENSOR_NCHW,
                        CUDNN_DATA_FLOAT,
-                       n, c,
-                       h,
-                       w) );
+                       1, n,
+                       b,
+                       c) );
     float alpha = 1.0f;
     float beta  = 0.0f;
-    cudnnErrorHandler( cudnnActivationForward(cudnnHandle,
+    cudnnThrowHandler( cudnnActivationForward(*cudnnHandle,
                        CUDNN_ACTIVATION_RELU,
                        &alpha,
                        srcTensorDesc,
                        srcData,
                        &beta,
                        dstTensorDesc,
-                       *dstData) );
-};*/
+                       dstData) );
+
+    printCudaData(b*c,dstData,"ACT2 dstData: ");
+};

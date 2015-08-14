@@ -39,7 +39,6 @@ class ReLUlayer_t {
     void m_loadDataToDevice ();
     void m_clearDataOnDevice ();
     void m_retriveDataFromDevice ();
-    void m_resize(int size, float *data);
 
 public:
     ReLUlayer_t (const std::vector<float> &weight,const std::vector<float> &bias,
@@ -69,6 +68,8 @@ public:
 
     /*----------Data Marching Functions------------*/
     void fullyConnectedForward(int c,float* srcData, float* dstData);
+    void activationForward(int c,float* srcData, float* dstData);
+    void meanSquaredErrorCostFunction(int c,float* srcData, float* dstData);
 
     /*------------PUBLIC MEMBER ACCESS-------------*/
     const std::vector<float>& weightAccess() {

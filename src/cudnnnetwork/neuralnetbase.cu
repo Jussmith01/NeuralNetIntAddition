@@ -240,6 +240,9 @@ void fpn::cuNeuralNetworkbase::m_loadNetwork(const std::string &fname) {
                 expline=0;
 
             if (SAVE) {
+                if ( weight_v.empty() || bias_v.empty() )
+                    fpnThrowHandler(std::string("Weights and biases cannot be empty! Check your network file."));
+
                 layers.emplace_back(weight_v,bias_v,&cudnnHandle,&cublasHandle,trainer);
                 layers.back().loadToDevice();
 
@@ -250,6 +253,15 @@ void fpn::cuNeuralNetworkbase::m_loadNetwork(const std::string &fname) {
             }
         }
         dataFile.close();
+
+        if ( layers.empty() )
+            fpnThrowHandler(std::string("No layers were defined! Check your network data file."));
+
+        int Nw = layers[0].weightAccess().size();
+        int Nb = layers[0].biasAccess(  ).size();
+
+        inlayersize = Nw/Nb;
+
     } else {
         std::cout << "NOT OPEN!" << std::endl;
     }
