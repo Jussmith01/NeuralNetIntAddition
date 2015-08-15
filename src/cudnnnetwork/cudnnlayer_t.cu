@@ -105,7 +105,7 @@ calculate the z values, which are used
 to calculate the activations.
 
 --------------------------------------*/
-void fpn::ReLUlayer_t::fullyConnectedForward(int c,float* srcData, float* dstData) {
+void fpn::ReLUlayer_t::fullyConnectedForward(int c,float* srcData, float** dstData) {
     if (n != 1) {
         fpnThrowHandler(std::string("Not Implemented"));
     }
@@ -121,28 +121,27 @@ void fpn::ReLUlayer_t::fullyConnectedForward(int c,float* srcData, float* dstDat
 
     float alpha = float(1), beta = float(1);
 
-    /* Loop over all data sets */
-    for (int i=0; i<c; ++i) {
-        /* Copy the biases into dstData at a specific index */
-        cudaThrowHandler( cudaMemcpy(dstData+i*dim_y,bias_d,dim_y*sizeof(float),cudaMemcpyDeviceToDevice) );
+    /* Copy Biases into the Dest set */
+    cu_MemcpySmalltoLargeD2D(c,dim_y,bias_d,dstData);
 
-        /*  */
-        cublasThrowHandler( cublasSgemv(*cublasHandle, CUBLAS_OP_T,
-                                        dim_x, dim_y,
-                                        &alpha,
-                                        weight_d, dim_x,
-                                        srcData+i*dim_x, 1,
-                                        &beta,
-                                        dstData+i*dim_y, 1) );
-    }
+    cudaDeviceSynchronize();
 
-    printCudaData(dim_y*c,dstData,"MULT dstData: ");
+    /* Feed forward all data via gemm */
+    cublasThrowHandler( cublasSgemm(*cublasHandle, CUBLAS_OP_T, CUBLAS_OP_N,
+                                    dim_y, c, dim_x,
+                                    &alpha,
+                                    weight_d, dim_x,
+                                    srcData, dim_x,
+                                    &beta,
+                                    (*dstData),dim_y) );
+
+    //printMatCudaData(dim_y,c,*dstData,"MULT dstData: ");
 };
 
-void fpn::ReLUlayer_t::activationForward(int c,float* srcData, float* dstData) {
+void fpn::ReLUlayer_t::activationForward(int c,float* srcData, float** dstData) {
     cu_resize(b*c,dstData);
 
-    printCudaData(b*c,srcData,"ACT1 srcData: ");
+    //printCudaData(b*c,srcData,"ACT1 srcData: ");
 
     cudnnThrowHandler( cudnnSetTensor4dDescriptor(srcTensorDesc,
                        CUDNN_TENSOR_NCHW,
@@ -159,13 +158,13 @@ void fpn::ReLUlayer_t::activationForward(int c,float* srcData, float* dstData) {
     float alpha = 1.0f;
     float beta  = 0.0f;
     cudnnThrowHandler( cudnnActivationForward(*cudnnHandle,
-                       CUDNN_ACTIVATION_RELU,
+                       CUDNN_ACTIVATION_SIGMOID,
                        &alpha,
                        srcTensorDesc,
                        srcData,
                        &beta,
                        dstTensorDesc,
-                       dstData) );
+                       *dstData) );
 
-    printCudaData(b*c,dstData,"ACT2 dstData: ");
+    //printCudaData(b*c,dstData,"ACT2 dstData: ");
 };

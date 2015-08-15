@@ -83,6 +83,7 @@
 		<Unit filename="src/tools/micro_timer.cpp" />
 		<Unit filename="src/tools/micro_timer.h" />
 		<Unit filename="src/tools/random.hpp" />
+		<Unit filename="src/tools/tools.hpp" />
 		<Extensions>
 			<code_completion />
 			<debugger />

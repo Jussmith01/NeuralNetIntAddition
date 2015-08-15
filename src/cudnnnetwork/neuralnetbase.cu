@@ -37,7 +37,7 @@ void fpn::cuNeuralNetworkbase::m_setupCudaDevice() {
 
     printDevProps(devprops);
 
-    cudaThrowHandler(cudaSetDevice(0));
+    cudaThrowHandler(cudaSetDevice(1));
 };
 
 /*-------Setup CUDA Libraries---------

@@ -54,7 +54,7 @@ public:
 
     void trainNetwork() {
         std::cout << " Training Network\n";
-        feedForward(inputData.size(),srcData_d,expectData.size(),cmpData_d,inparams.tss);
+        feedForwardTrainer(inputData.size(),srcData_d,expectData.size(),cmpData_d,inparams.tss);
     };
 
     void testNetwork() {

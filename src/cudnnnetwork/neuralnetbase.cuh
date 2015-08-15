@@ -121,7 +121,7 @@ public:
     };
 
     /*-------------Class Public functions----------------*/
-    void feedForward(int Ns,float *srcData,int No,float *cmpData,int Nd) {
+    void feedForwardTrainer(int Ns,const float *srcData,int No,const float *cmpData,int Nd) {
         // Verify that the input data is of the correct size for the network.
         if ( Ns/Nd != inlayersize ) {
             std::stringstream ss;
@@ -138,23 +138,32 @@ public:
             fpnThrowHandler(ss.str());
         }
 
+        float *wk1Data_d=NULL;
+        float *wk2Data_d=NULL;// Working Data
 
-        float *wk1Data_d=NULL,*wk2Data_d=NULL; // Working Data
+        int i=0;
+        while (i<20) {
+            /* Allocate Device Data */
+            cudaThrowHandler( cudaMalloc((void**)&wk1Data_d,Ns*sizeof(float)) );
+            cudaThrowHandler( cudaMalloc((void**)&wk2Data_d,   sizeof(float)) );
 
-        /* Allocate Device Data */
-        cudaThrowHandler( cudaMalloc((void**)&wk1Data_d,Ns*sizeof(float)) );
-        cudaThrowHandler( cudaMalloc((void**)&wk2Data_d,   sizeof(float)) );
+            /* Copy starting data */
+            cudaThrowHandler( cudaMemcpy(wk1Data_d,srcData,Ns*sizeof(float),cudaMemcpyDeviceToDevice) );
 
-        /* Copy starting data */
-        cudaThrowHandler( cudaMemcpy(wk1Data_d,srcData,Ns*sizeof(float),cudaMemcpyDeviceToDevice) );
+            for (auto l : layers) {
+                l.fullyConnectedForward(Nd,wk1Data_d,&wk2Data_d);
+                l.activationForward    (Nd,wk2Data_d,&wk1Data_d);
+            }
 
-        for (auto l : layers) {
-            l.fullyConnectedForward(Nd,wk1Data_d,wk2Data_d);
-            l.activationForward    (Nd,wk2Data_d,wk1Data_d);
+            meanSquaredErrorCostFunction(cublasHandle,Nd,No,cmpData,wk1Data_d);
+
+            cudaDeviceSynchronize();
+            cudaThrowHandler(cudaFree(wk1Data_d));
+            cudaThrowHandler(cudaFree(wk2Data_d));
+            cudaDeviceSynchronize();
+
+            ++i;
         }
-
-        meanSquaredErrorCostFunction(cublasHandle,Nd,No,cmpData,wk1Data_d);
-
     };
 
     void backPropagate(float *srcData,float **dstData) {

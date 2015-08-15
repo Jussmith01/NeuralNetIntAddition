@@ -3,6 +3,8 @@
 
 #include <cuda.h>
 
+#include "../tools/tools.hpp"
+
 namespace fpn
 {
 
@@ -49,6 +51,22 @@ inline void printCudaData(int size,float *data,std::string message) {
     std::cout << "\n";
 };
 
+// FOR TESTING PURPOSES!!!!!!!
+inline void printMatCudaData(int row,int col,float *data,std::string message) {
+    std::vector<float> test(row*col);
+    cudaThrowHandler( cudaMemcpy(&test[0],data,row*col*sizeof(float),cudaMemcpyDeviceToHost) );
+    std::cout << message << "\n";
+    for (int i=0;i<row;++i)
+    {
+        for (int j=0;j<col;++j)
+        {
+            std::cout << test[i+j*row] << " ";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "\n";
+};
+
 /*--------Resize a CUDA Container-------
 
 This function resizes a CUDA container
@@ -56,12 +74,48 @@ for use with different sized data
 structures.
 
 --------------------------------------*/
-inline void cu_resize(int size, float *data) {
+inline void cu_resize(int size, float **data) {
     if (data != NULL) {
-        cudaThrowHandler( cudaFree(data) );
+        cudaThrowHandler( cudaFree(*data) );
     }
-    cudaThrowHandler( cudaMalloc((void**)&data, size*sizeof(float)) );
-}
+    cudaThrowHandler( cudaMalloc((void**)data, size*sizeof(float)) );
+};
+
+/*--------Resize a CUDA Container-------
+
+Nd = Smaller data size to be moved
+Nl = Number of rows to fill.
+
+Total size of new array must be Nd*Nl
+
+This fucntion uses prime facorization
+to reduce the number of memory calls
+required to copy one small array to
+a much larger array many times.
+
+--------------------------------------*/
+inline void cu_MemcpySmalltoLargeD2D(int Nl,int Ns,float *src,float **data) {
+    /* Fill the first column of data to seed the rest */
+    cudaThrowHandler( cudaMemcpyAsync(*data,src,Ns*sizeof(float),cudaMemcpyDeviceToDevice) );
+
+    /* Determine how many to fill initialially */
+    std::vector<int> primes(tools::primeFactors(Nl));
+
+    /* sync to ensure previous memcpyasync is complete*/
+    cudaDeviceSynchronize();
+
+    /* Use primes to chuck copying of data - More efficient than a bunch of small calls. */
+    size_t cIdx=1;
+    for (auto p : primes)
+    {
+        for (int i=1;i<p;++i)
+        {
+            cudaThrowHandler( cudaMemcpy((*data)+i*cIdx*Ns,*data,cIdx*Ns*sizeof(float),cudaMemcpyDeviceToDevice) );
+        }
+        cIdx *= p;
+    }
+
+};
 
 };
 
