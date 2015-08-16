@@ -158,7 +158,7 @@ void fpn::ReLUlayer_t::activationForward(int c,float* srcData, float** dstData) 
     float alpha = 1.0f;
     float beta  = 0.0f;
     cudnnThrowHandler( cudnnActivationForward(*cudnnHandle,
-                       CUDNN_ACTIVATION_SIGMOID,
+                       CUDNN_ACTIVATION_RELU,
                        &alpha,
                        srcTensorDesc,
                        srcData,
