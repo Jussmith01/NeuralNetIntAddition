@@ -1,3 +1,11 @@
+/*----------------------------------------------
+        Written by Justin Smith ~August 2015
+        E-Mail Jussmith48@gmail.com
+        Copyright the Roitberg research group
+        Chemistry Department
+        University of Florida
+        Gainesville FL.
+------------------------------------------------*/
 //________________________________________________________________________//
 //      *************************************************************     //
 //                      Compiler Error Handling
@@ -8,7 +16,7 @@
         #error "Insufficient GNU Compiler Version -- 4.9 or greater required"
     #endif
 #else
-    #warning "Currently only GNU compilers are supported and tested, but go ahead if you want to."
+    #warning "Currently only GNU compilers are supported and tested, but go ahead if you know what you're doing."
 #endif
 
 //________________________________________________________________________//
@@ -33,7 +41,7 @@
         _error << "CUDA Error -- \"" << cudaGetErrorString(_errchk) << "\"\n";                     \
         _error << _errchk << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;       \
         _error << " in function -- " << __FUNCTION__ << "()" <<  std::endl;                        \
-        std::cerr << _error.str() << std::endl;                                                          \
+        std::cerr << _error.str() << std::endl;                                                    \
         throw _error.str();                                                                        \
     }                                                                                              \
 };
@@ -47,7 +55,7 @@
         _error << "cuDNN Error -- \"" << cudnnGetErrorString(_errchk) << "\"\n";                    \
         _error << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;                   \
         _error << " in function -- " << __FUNCTION__ << "()" <<  std::endl;                         \
-        std::cerr << _error.str() << std::endl;                                                           \
+        std::cerr << _error.str() << std::endl;                                                     \
         throw _error.str();                                                                         \
     }                                                                                               \
 };
@@ -56,12 +64,13 @@
 {                                                                                                    \
     if (_errchk != CUBLAS_STATUS_SUCCESS)                                                            \
     {                                                                                                \
+                                                                                                     \
         std::cerr <<  "\nERROR: cuBLAS throw detected! Attempting to shut down nicely!" << std::endl;\
         std::stringstream _error;                                                                    \
         _error << "cuBLAS Error -- Error Code: \"" << _errchk << "\"";                               \
         _error << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;                    \
         _error << " in function -- " << __FUNCTION__ << "()" <<  std::endl;                          \
-        std::cerr << _error.str() << std::endl;                                                            \
+        std::cerr << _error.str() << std::endl;                                                      \
         throw _error.str();                                                                          \
     }                                                                                                \
 };
@@ -75,7 +84,7 @@
         _error << "\nFPN Error -- \"" << _errchk << "\" \n";                                      \
         _error << " in location -- " << __FILE__ << ":" << __LINE__ << std::endl;                 \
         _error << " in function -- " << __FUNCTION__ << "()" << std::endl;                        \
-        std::cerr << _error.str() << std::endl;                                                         \
+        std::cerr << _error.str() << std::endl;                                                   \
         throw _error.str();                                                                       \
     }                                                                                             \
 };

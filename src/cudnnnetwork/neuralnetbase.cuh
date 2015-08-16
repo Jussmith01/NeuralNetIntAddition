@@ -1,3 +1,11 @@
+/*----------------------------------------------
+        Written by Justin Smith ~August 2015
+        E-Mail Jussmith48@gmail.com
+        Copyright the Roitberg research group
+        Chemistry Department
+        University of Florida
+        Gainesville FL.
+------------------------------------------------*/
 #ifndef NNBASE_CU
 #define NNBASE_CU
 
@@ -6,17 +14,57 @@
 
 namespace fpn { // Force Prediction Network
 
+/*--------cuNeuralNetworkbase Initializers----------
+
+These initializers have different effects when used
+to construct the cuNeuralNetworkbase class.
+
+CREATE means that a network will be randomly generated
+LOAD means that a network will be loaded from a file
+TRAIN allocate memory for storing derivatives so that
+      the networks cost can be minimized in training
+TEST Only allocate what is necessary to feed forward,
+     in other words no space is allocated for training
+     the network, only feeding forward.
+
+----------------------------------------------------*/
 enum  Initializers {
     FPN_CREATE_AND_TRAIN,
-    FPN_LOAD_AND_OPT,
+    FPN_LOAD_AND_TEST,
     FPN_LOAD_AND_TRAIN
 };
 
-//________________________________________________________________________//
-//      *************************************************************     //
-//                        NeuralNet Base Class
-//                  Holds timer variables and class functions
-//      *************************************************************     //
+/*-----------------------NeuralNet Base Class-----------------------
+
+      Class holds all required functionality for creating or loading
+      a deep neural network and training or testing on that network.
+      The class does this by either randomly initializing a network
+      or loading a previously defined network. Then defined a network
+      or layer types which handle their own data individually. This
+      class then works with the layer types to carryout different
+      feed forward and back propagation algoithms to minimize the
+      cost of the neural network.
+
+      NOTE: Currently only ReLU layers are used in the layer type by
+      the name of ReLUlayer_t. I want to possibly change this later
+      to work with a general layer_t type rather than something so
+      specific.
+
+      The constuctor is initialized with the following arguments:
+      1) const std::string networknfo
+          This passes in either a file to load or a network template
+          string. This is decided based on the initializer defined
+          below.
+
+      2) enum Initializers setup
+          There are three current enums to initialize the class.
+          FPN_CREATE_AND_TRAIN : Create a network, Train the network
+          FPN_LOAD_AND_TEST : Load a network, test the network
+          FPN_LOAD_AND_TRAIN : Load a network, train the network
+
+        Written by Justin Smith ~August 2015
+        E-Mail Jussmith48@gmail.com
+---------------------------------------------------------------------*/
 class cuNeuralNetworkbase {
 
     // cuda Information
@@ -60,9 +108,6 @@ class cuNeuralNetworkbase {
     /* Reads a network template fule */
     std::vector<unsigned int> m_parseNetworkTemplate(const std::string templateString);
 
-    //void activationForward(int n, int c, int h, int w, float* srcData, float** dstData);
-    //void fullyConnectedForward(int& n, int& c, int& h, int& w,float* srcData, float** dstData);
-
     /*-------Primary Constructor--------*/
     cuNeuralNetworkbase () {
         // Get cuda device information and setup device
@@ -86,7 +131,7 @@ public:
             };
 
         /* This case loads a network from a saved network file and sets it up */
-        case FPN_LOAD_AND_OPT: {
+        case FPN_LOAD_AND_TEST: {
             trainer=false; // Load network and optimize data
             m_loadNetwork(networknfo);
             break;
@@ -121,112 +166,14 @@ public:
     };
 
     /*-------------Class Public functions----------------*/
-    void feedForwardTrainer(int Ns,const float *srcData,int No,const float *cmpData,int Nd) {
-        // Verify that the input data is of the correct size for the network.
-        if ( Ns/Nd != inlayersize ) {
-            std::stringstream ss;
-            ss << "The training data input size (" << Ns/Nd << ") != expected from layers sizes (" << inlayersize << ")!";
-            fpnThrowHandler(ss.str());
-        }
 
-        // Verify that the output data is of the correct size for the network.
-        if ( layers.back().biasAccess().size() != No/Nd ) {
-            std::stringstream ss;
-            ss << "The training data output size (" << No/Nd
-               << ") != expected from layers output size ("
-               << layers.back().biasAccess().size() << ")!";
-            fpnThrowHandler(ss.str());
-        }
+    /*   Feed Forward Training Function    */
+    void feedForwardTrainer(int Ns,const float *srcData,int No,const float *cmpData,int Nd);
 
-        float *wk1Data_d=NULL;
-        float *wk2Data_d=NULL;// Working Data
+    /*   Feed Forward Comparing Function    */
+    void feedForwardCompare(int Ns,const float *srcData,int No,const float *cmpData,int Nd);
 
-        int i=0;
-        while (i<20) {
-            /* Allocate Device Data */
-            cudaThrowHandler( cudaMalloc((void**)&wk1Data_d,Ns*sizeof(float)) );
-            cudaThrowHandler( cudaMalloc((void**)&wk2Data_d,   sizeof(float)) );
-
-            /* Copy starting data */
-            cudaThrowHandler( cudaMemcpy(wk1Data_d,srcData,Ns*sizeof(float),cudaMemcpyDeviceToDevice) );
-
-            for (auto l : layers) {
-                l.fullyConnectedForward(Nd,wk1Data_d,&wk2Data_d);
-                l.activationForward    (Nd,wk2Data_d,&wk1Data_d);
-            }
-
-            meanSquaredErrorCostFunction(cublasHandle,Nd,No,cmpData,wk1Data_d);
-
-            cudaDeviceSynchronize();
-            cudaThrowHandler(cudaFree(wk1Data_d));
-            cudaThrowHandler(cudaFree(wk2Data_d));
-            cudaDeviceSynchronize();
-
-            ++i;
-        }
-    };
-
-    void backPropagate(float *srcData,float **dstData) {
-
-    };
-
-    /*     Activation Test      */
-    /*void ActivationTest ()
-    {
-        int n,c,h,w,IMAGE_H,IMAGE_W;
-        n=2; // Number of structures in data set
-        c=1; // Feature maps, no use I can thing of for our purposes
-        IMAGE_H=3; // Number of vectors per structure
-        IMAGE_W=3; // Number of components per vector
-        float *srcData = NULL, *dstData = NULL; // Pointers to device data
-        //float *weight_d = NULL, *dstData = NULL; // Pointers to device data
-        float imgData_h[2*IMAGE_H*IMAGE_W]; // "image" or structure data
-
-        // Copy data into image
-        std::cout << "Starting vector:" << std::endl;
-        for (int k = 0; k < 1; k++) { //
-            for (int i = 0; i < IMAGE_H; i++) { // Num Vectors
-                for (int j = 0; j < IMAGE_W; j++) { // Num Components
-                    int idx = (IMAGE_W*i + j)+k*IMAGE_W*IMAGE_H;
-                    imgData_h[idx] = -1 / float(2);
-                    std::cout << imgData_h[idx] << " ";
-                }
-                std::cout << std::endl;
-            }
-        }
-
-        std::cout << "Performing forward propagation...\n";
-        cudaErrorHandler( cudaMalloc(&srcData, IMAGE_H*IMAGE_W*sizeof(float)) ); // Allocate space on GPU
-        cudaErrorHandler( cudaMalloc(&dstData, IMAGE_H*IMAGE_W*sizeof(float)) ); // Allocate space on GPU
-        cudaErrorHandler( cudaMemcpy(srcData, imgData_h,IMAGE_H*IMAGE_W*sizeof(float),cudaMemcpyHostToDevice) ); // Move data
-
-        n = 1;
-        c = 1;
-        h = IMAGE_H;
-        w = IMAGE_W;
-        int N = n*c*h*w;
-
-        //fullyConnectedForward(n,c,h,w,srcData,&dstData,);
-        activationForward(n, c, h, w, srcData,&dstData);
-
-        float result[N];
-        cudaErrorHandler( cudaMemcpy(result, dstData, N*sizeof(float), cudaMemcpyDeviceToHost) );
-
-        std::cout << "Resulting vector:" << std::endl;
-        // Plot to console and normalize image to be in range [0,1]
-        for (int k = 0; k < 1; k++) { //
-            for (int i = 0; i < IMAGE_H; i++) {
-                for (int j = 0; j < IMAGE_W; j++) {
-                    int idx = (IMAGE_W*i + j)+k*IMAGE_W*IMAGE_H;
-                    std::cout << result[idx] << " ";
-                }
-                std::cout << std::endl;
-            }
-        }
-
-        cudaErrorHandler( cudaFree(srcData) );
-        cudaErrorHandler( cudaFree(dstData) );
-    };*/
+    void backPropagate(float *srcData,float **dstData) {};
 };
 
 };

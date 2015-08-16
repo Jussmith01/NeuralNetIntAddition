@@ -1,3 +1,11 @@
+/*----------------------------------------------
+        Written by Justin Smith ~August 2015
+        E-Mail Jussmith48@gmail.com
+        Copyright the Roitberg research group
+        Chemistry Department
+        University of Florida
+        Gainesville FL.
+------------------------------------------------*/
 // STD Lib Headers
 #include <iostream>
 #include <vector>

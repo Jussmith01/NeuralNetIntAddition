@@ -1,3 +1,12 @@
+/*----------------------------------------------
+        Written by Justin Smith ~August 2015
+        E-Mail Jussmith48@gmail.com
+        Copyright the Roitberg research group
+        Chemistry Department
+        University of Florida
+        Gainesville FL.
+------------------------------------------------*/
+
 #ifndef NNTRAINER_CU
 #define NNTRAINER_CU
 
@@ -8,27 +17,54 @@
 
 namespace fpn { // Force Prediction Network
 
-struct csvdataStructure {
+/*--------Input Data Structure----------
+
+
+
+--------------------------------------*/
+struct inDataStructure {
     std::string fname;
     unsigned int idBeg,idEnd;
     unsigned int edBeg,edEnd;
     unsigned int tss; //training set size
 
-    csvdataStructure(std::string fname,unsigned int idBeg,unsigned int idEnd,
+    inDataStructure(std::string fname,unsigned int idBeg,unsigned int idEnd,
                                        unsigned int edBeg,unsigned int edEnd,
                                        unsigned int tss) :
         fname(fname),idBeg(idBeg),idEnd(idEnd),edBeg(edBeg),edEnd(edEnd),tss(tss)
     {};
 };
 
-//________________________________________________________________________//
-//      *************************************************************     //
-//                        NeuralNet Trainer Class
-//                 Carries out training of the base network
-//      *************************************************************     //
+/*----------------------NeuralNet Trainer Class-----------------------
+
+    This class inherits the cuNeuralNetworkbase class and public
+    functionality. This class only constructs the cuNeuralNetworkbase
+    class to carry out training of a network, be it CREATE and TRAIN
+    or LOAD and TRAIN. The sister class to this one
+    cuNeuralNetworkCompare is specifically for testing already trained
+    classes, and also inherits the cuNeuralNetworkbase class and public
+    functionality.
+
+    The constuctor is initialized with the following arguments:
+    1) indataStructure datastruct
+        This input data structure contains needed parameters for the
+        class's operations.
+    2) std::string init
+        This is the initializer string. Basically either a filename
+        or a network template string, based on the initializer type
+        parameter.
+    3) Initializers type
+        There are three current enums to initialize the class.
+        FPN_CREATE_AND_TRAIN : Create a network, Train the network
+        FPN_LOAD_AND_TEST : Load a network, test the network
+        FPN_LOAD_AND_TRAIN : Load a network, train the network
+
+        Written by Justin Smith ~August 2015
+        E-Mail Jussmith48@gmail.com
+---------------------------------------------------------------------*/
 class cuNeuralNetworkTrainer : public cuNeuralNetworkbase {
     /* Input Data */
-    csvdataStructure inparams;
+    inDataStructure inparams;
 
     /* Host Data Storage */
     std::vector<float> inputData;
@@ -45,7 +81,7 @@ class cuNeuralNetworkTrainer : public cuNeuralNetworkbase {
 
 public:
 
-    cuNeuralNetworkTrainer(csvdataStructure datastruct,std::string init,Initializers type) :
+    cuNeuralNetworkTrainer(inDataStructure datastruct,std::string init,Initializers type) :
             cuNeuralNetworkbase(init,type),inparams(datastruct) {
         std::cout << "Building Training Class and Loading Training Data!\n";
         m_loadTrainingData();
@@ -55,10 +91,6 @@ public:
     void trainNetwork() {
         std::cout << " Training Network\n";
         feedForwardTrainer(inputData.size(),srcData_d,expectData.size(),cmpData_d,inparams.tss);
-    };
-
-    void testNetwork() {
-        std::cout << " Testing Network\n";
     };
 
     void saveNetwork() {

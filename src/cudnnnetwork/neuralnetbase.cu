@@ -1,3 +1,12 @@
+/*----------------------------------------------
+        Written by Justin Smith ~August 2015
+        E-Mail Jussmith48@gmail.com
+        Copyright the Roitberg research group
+        Chemistry Department
+        University of Florida
+        Gainesville FL.
+------------------------------------------------*/
+
 // STD Lib Headers
 #include <iostream>
 #include <vector>
@@ -20,6 +29,8 @@
 #include "../cutools/curandhosttools.cuh"
 
 #include "neuralnetbase.cuh"
+
+/***********CLASS PRIVATE MEMBER FUNCTIONS*********/
 
 /*--------Setup CUDA Devices----------
 
@@ -97,7 +108,10 @@ void fpn::cuNeuralNetworkbase::m_createNetwork(const std::string templateString)
     }
 
     wbdataSize = ((Nw + Nb) * sizeof(float)) / float(1024*1024);
-    if (trainer) {wbdataSize*=2.0;wbdataSize+=((Nb*sizeof(float))/float(1024*1024));} // Memory req doubled for training (derivatives)
+    if (trainer) {
+        wbdataSize*=2.0;    // Memory req doubled for training (derivatives)
+        wbdataSize+=((Nb*sizeof(float))/float(1024*1024));
+    }
 
     std::cout << "\n  Num. Weights: " << Nw << " -- Num. Biases: " << Nb << " required" << std::endl;
     std::cout << "  Network Device Memory Cost: " << wbdataSize << "MB" << std::endl;
@@ -264,5 +278,160 @@ void fpn::cuNeuralNetworkbase::m_loadNetwork(const std::string &fname) {
 
     } else {
         std::cout << "NOT OPEN!" << std::endl;
+    }
+};
+
+/***********CLASS PUBLIC MEMBER FUNCTIONS*********/
+
+/*---------Feed Forward Trainer----------
+
+This carrys out a feed forward in training
+mode. This means that while feeding forward,
+derivatives and other things needed for
+training are calculated along with the
+forward activations and end cost.
+
+Arguments:
+1) int Ns: (in)
+    The size of a single input layer.
+
+2) const float *srcData (in) (size Ns*Nd)
+    The input layer data - Initial activations.
+
+3) int No: (in)
+    The size of a single output layer.
+
+4) const float *cmpData (in) (size No*Nd)
+    The expected output layer data, this is
+    the data we train to match.
+
+5) int Nd: (in)
+    The total number of training sets
+    being used.
+
+CLASS IS IN THE WORKS!! CURRENTLY DOES NOT
+CALCULATE DERIVATES OR MINIMIZE COST!
+
+-----------------------------------------*/
+void fpn::cuNeuralNetworkbase::feedForwardTrainer(int Ns,const float *srcData,int No,const float *cmpData,int Nd) {
+    // Verify that the input data is of the correct size for the network.
+    if ( Ns/Nd != inlayersize ) {
+        std::stringstream ss;
+        ss << "The training data input size (" << Ns/Nd << ") != expected from layers sizes (" << inlayersize << ")!";
+        fpnThrowHandler(ss.str());
+    }
+
+    // Verify that the output data is of the correct size for the network.
+    if ( layers.back().biasAccess().size() != No/Nd ) {
+        std::stringstream ss;
+        ss << "The training data output size (" << No/Nd
+           << ") != expected from layers output size ("
+           << layers.back().biasAccess().size() << ")!";
+        fpnThrowHandler(ss.str());
+    }
+
+    float *wk1Data_d=NULL;
+    float *wk2Data_d=NULL;// Working Data
+
+    int i=0;
+    while (i<20) {
+        /* Allocate Device Data */
+        cudaThrowHandler( cudaMalloc((void**)&wk1Data_d,Ns*sizeof(float)) );
+        cudaThrowHandler( cudaMalloc((void**)&wk2Data_d,   sizeof(float)) );
+
+        /* Copy starting data */
+        cudaThrowHandler( cudaMemcpy(wk1Data_d,srcData,Ns*sizeof(float),cudaMemcpyDeviceToDevice) );
+
+        for (auto l : layers) {
+            l.fullyConnectedForward(Nd,wk1Data_d,&wk2Data_d);
+            l.activationForward    (Nd,wk2Data_d,&wk1Data_d);
+        }
+
+        meanSquaredErrorCostFunction(cublasHandle,Nd,No,cmpData,wk1Data_d);
+
+        cudaDeviceSynchronize();
+        cudaThrowHandler(cudaFree(wk1Data_d));
+        cudaThrowHandler(cudaFree(wk2Data_d));
+        cudaDeviceSynchronize();
+
+        ++i;
+    }
+};
+
+/*---------Feed Forward Compare----------
+
+This carrys out a feed forward in compare
+mode. This means that a simple feed forward
+is carried out over the entire supplied
+dataset. A comparison of the output to
+expected is then carried out. This is for
+testing the fitness of a neural net at
+solving a task.
+
+Arguments:
+1) int Ns: (in)
+    The size of a single input layer.
+
+2) const float *srcData (in) (size Ns*Nd)
+    The input layer data - Initial activations.
+
+3) int No: (in)
+    The size of a single output layer.
+
+4) const float *cmpData (in) (size No*Nd)
+    The expected output layer data, this is
+    the data we train to match.
+
+5) int Nd: (in)
+    The total number of comparison sets
+    being used.
+
+CLASS IS IN THE WORKS!! NEED TO BUILD IN
+METHODS OF COMPARISON! CURRENTLY ONLY CAL
+CULATES COST.
+
+-----------------------------------------*/
+void fpn::cuNeuralNetworkbase::feedForwardCompare(int Ns,const float *srcData,int No,const float *cmpData,int Nd) {
+    // Verify that the input data is of the correct size for the network.
+    if ( Ns/Nd != inlayersize ) {
+        std::stringstream ss;
+        ss << "The training data input size (" << Ns/Nd << ") != expected from layers sizes (" << inlayersize << ")!";
+        fpnThrowHandler(ss.str());
+    }
+
+    // Verify that the output data is of the correct size for the network.
+    if ( layers.back().biasAccess().size() != No/Nd ) {
+        std::stringstream ss;
+        ss << "The training data output size (" << No/Nd
+           << ") != expected from layers output size ("
+           << layers.back().biasAccess().size() << ")!";
+        fpnThrowHandler(ss.str());
+    }
+
+    float *wk1Data_d=NULL;
+    float *wk2Data_d=NULL;// Working Data
+
+    int i=0;
+    while (i<20) {
+        /* Allocate Device Data */
+        cudaThrowHandler( cudaMalloc((void**)&wk1Data_d,Ns*sizeof(float)) );
+        cudaThrowHandler( cudaMalloc((void**)&wk2Data_d,   sizeof(float)) );
+
+        /* Copy starting data */
+        cudaThrowHandler( cudaMemcpy(wk1Data_d,srcData,Ns*sizeof(float),cudaMemcpyDeviceToDevice) );
+
+        for (auto l : layers) {
+            l.fullyConnectedForward(Nd,wk1Data_d,&wk2Data_d);
+            l.activationForward    (Nd,wk2Data_d,&wk1Data_d);
+        }
+
+        meanSquaredErrorCostFunction(cublasHandle,Nd,No,cmpData,wk1Data_d);
+
+        cudaDeviceSynchronize();
+        cudaThrowHandler(cudaFree(wk1Data_d));
+        cudaThrowHandler(cudaFree(wk2Data_d));
+        cudaDeviceSynchronize();
+
+        ++i;
     }
 };
