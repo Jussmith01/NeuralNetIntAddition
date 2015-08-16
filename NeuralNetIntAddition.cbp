@@ -68,6 +68,11 @@
 		</Unit>
 		<Unit filename="src/cudnnnetwork/neuralnettrainer.cuh" />
 		<Unit filename="src/cutools/cublashosttools.cuh" />
+		<Unit filename="src/cutools/cudadevicetools.cu">
+			<Option compile="1" />
+			<Option link="1" />
+		</Unit>
+		<Unit filename="src/cutools/cudadevicetools.cuh" />
 		<Unit filename="src/cutools/cudahosttools.cuh" />
 		<Unit filename="src/cutools/curandhosttools.cuh" />
 		<Unit filename="src/errorhandling.h" />

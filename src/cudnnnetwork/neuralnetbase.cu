@@ -26,6 +26,7 @@
 #include "../tools/csvreader.hpp"
 
 #include "../cutools/cudahosttools.cuh"
+#include "../cutools/cudadevicetools.cuh"
 #include "../cutools/curandhosttools.cuh"
 
 #include "neuralnetbase.cuh"
@@ -39,6 +40,8 @@ properties.
 
 --------------------------------------*/
 void fpn::cuNeuralNetworkbase::m_setupCudaDevice() {
+    cudaThrowHandler( cudaDeviceReset() );
+
     cudaThrowHandler(cudaGetDeviceCount(&numdevice));
     devprops.resize(numdevice);
 
@@ -333,29 +336,31 @@ void fpn::cuNeuralNetworkbase::feedForwardTrainer(int Ns,const float *srcData,in
     float *wk1Data_d=NULL;
     float *wk2Data_d=NULL;// Working Data
 
-    int i=0;
-    while (i<20) {
-        /* Allocate Device Data */
-        cudaThrowHandler( cudaMalloc((void**)&wk1Data_d,Ns*sizeof(float)) );
-        cudaThrowHandler( cudaMalloc((void**)&wk2Data_d,   sizeof(float)) );
+    /* Allocate Device Data */
+    cudaThrowHandler( cudaMalloc((void**)&wk1Data_d,Ns*Nd*sizeof(float)) );
+    cudaThrowHandler( cudaMalloc((void**)&wk2Data_d,Ns*Nd*sizeof(float)) );
 
-        /* Copy starting data */
-        cudaThrowHandler( cudaMemcpy(wk1Data_d,srcData,Ns*sizeof(float),cudaMemcpyDeviceToDevice) );
+    /* Copy starting data */
+    cudaThrowHandler( cudaMemcpy(wk1Data_d,srcData,Ns*Nd*sizeof(float),cudaMemcpyDeviceToDevice) );
+    cudaThrowHandler( cudaMemcpy(wk2Data_d,srcData,Ns*Nd*sizeof(float),cudaMemcpyDeviceToDevice) );
 
-        for (auto l : layers) {
-            l.fullyConnectedForward(Nd,wk1Data_d,&wk2Data_d);
-            l.activationForward    (Nd,wk2Data_d,&wk1Data_d);
-        }
+    //printCudaData(Ns,wk1Data_d,"ARR 1");
+    //printCudaData(Ns,wk2Data_d,"ARR 2");
 
-        meanSquaredErrorCostFunction(cublasHandle,Nd,No,cmpData,wk1Data_d);
+    cudaThrowHandler( devt::cuHadamardProduct(wk1Data_d,wk2Data_d,Ns*Nd) );
 
-        cudaDeviceSynchronize();
-        cudaThrowHandler(cudaFree(wk1Data_d));
-        cudaThrowHandler(cudaFree(wk2Data_d));
-        cudaDeviceSynchronize();
+    //printCudaData(Ns,wk2Data_d,"HADAMARD RESULT");
 
-        ++i;
-    }
+    /*for (auto l : layers) {
+        l.fullyConnectedForward(Nd,wk1Data_d,&wk2Data_d);
+        l.activationForward    (Nd,wk2Data_d,&wk1Data_d);
+    }*/
+
+    //meanSquaredErrorCostFunction(cublasHandle,Nd,No,cmpData,wk1Data_d);
+
+    cudaThrowHandler(cudaFree(wk1Data_d));
+    cudaThrowHandler(cudaFree(wk2Data_d));
+    //cudaDeviceSynchronize();
 };
 
 /*---------Feed Forward Compare----------

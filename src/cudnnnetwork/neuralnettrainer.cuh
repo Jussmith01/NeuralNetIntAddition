@@ -80,7 +80,7 @@ class cuNeuralNetworkTrainer : public cuNeuralNetworkbase {
     void m_clearDataFromDevice();
 
 public:
-
+    /* Constructor */
     cuNeuralNetworkTrainer(inDataStructure datastruct,std::string init,Initializers type) :
             cuNeuralNetworkbase(init,type),inparams(datastruct) {
         std::cout << "Building Training Class and Loading Training Data!\n";
@@ -88,15 +88,18 @@ public:
         m_setDataOnDevice();
     }
 
+    /* Train the network */
     void trainNetwork() {
         std::cout << " Training Network\n";
         feedForwardTrainer(inputData.size(),srcData_d,expectData.size(),cmpData_d,inparams.tss);
     };
 
+    /* Save the network (Currently in base class destructor, may keep it there.) */
     void saveNetwork() {
         std::cout << " Saving Network\n";
     };
 
+    /* Clear all data from host and device */
     void clearNetwork() {
         std::cout << " Clearing Network\n";
         inputData.clear();
@@ -104,6 +107,7 @@ public:
         m_clearDataFromDevice();
     };
 
+    /* Destructor */
     ~cuNeuralNetworkTrainer() {};
 };
 
