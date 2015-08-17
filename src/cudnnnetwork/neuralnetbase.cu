@@ -337,17 +337,21 @@ void fpn::cuNeuralNetworkbase::feedForwardTrainer(int Ns,const float *srcData,in
     float *wk2Data_d=NULL;// Working Data
 
     /* Allocate Device Data */
-    cudaThrowHandler( cudaMalloc((void**)&wk1Data_d,Ns*Nd*sizeof(float)) );
-    cudaThrowHandler( cudaMalloc((void**)&wk2Data_d,Ns*Nd*sizeof(float)) );
+    cudaThrowHandler( cudaMalloc((void**)&wk1Data_d,100*Ns*sizeof(float)) );
+    cudaThrowHandler( cudaMalloc((void**)&wk2Data_d,100*Ns*sizeof(float)) );
 
     /* Copy starting data */
-    cudaThrowHandler( cudaMemcpy(wk1Data_d,srcData,Ns*Nd*sizeof(float),cudaMemcpyDeviceToDevice) );
-    cudaThrowHandler( cudaMemcpy(wk2Data_d,srcData,Ns*Nd*sizeof(float),cudaMemcpyDeviceToDevice) );
+    cu_MemcpySmalltoLargeD2D(100,Ns,srcData,wk1Data_d);
+    cu_MemcpySmalltoLargeD2D(100,Ns,srcData,wk2Data_d);
+
+    //cudaThrowHandler( cudaMemcpy(wk1Data_d,srcData,Ns*sizeof(float),cudaMemcpyDeviceToDevice) );
+    //cudaThrowHandler( cudaMemcpy(wk2Data_d,srcData,Ns*sizeof(float),cudaMemcpyDeviceToDevice) );
 
     //printCudaData(Ns,wk1Data_d,"ARR 1");
     //printCudaData(Ns,wk2Data_d,"ARR 2");
+    std::cout << "Size: " << 100*Ns << std::endl;
 
-    cudaThrowHandler( devt::cuHadamardProduct(wk1Data_d,wk2Data_d,Ns*Nd) );
+    cudaThrowHandler( devt::cuHadamardProduct(wk1Data_d,wk2Data_d,100*Ns) );
 
     //printCudaData(Ns,wk2Data_d,"HADAMARD RESULT");
 
